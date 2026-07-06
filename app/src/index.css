@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-bg;
+  }
+  body {
+    @apply min-h-screen font-display;
+  }
+}
+
+@layer components {
+  .card {
+    @apply mb-5 overflow-hidden rounded-lg border border-border bg-bg-elevated;
+  }
+  .card-head {
+    @apply flex items-center justify-between border-b border-border-muted px-4 py-2.5 font-mono text-sm text-txt-secondary;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
