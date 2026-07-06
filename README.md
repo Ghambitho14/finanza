@@ -39,6 +39,12 @@ cd app
 pnpm build
 ```
 
+## Deploy en Vercel
+
+1. Conectar repo a Vercel
+2. Root Directory: `app`
+3. Framework: Vite (se detecta automaticamente)
+
 ## Docker
 
 ```bash
