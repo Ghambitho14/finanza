@@ -1,0 +1,63 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: finanzas-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecret}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-finanzas}
+      MYSQL_USER: ${MYSQL_USER:-finanzas}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-finanzas}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./server/sql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    ports:
+      - "127.0.0.1:3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    networks:
+      - finanzas
+
+  api:
+    build:
+      context: ./server
+    container_name: finanzas-api
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      DB_CLIENT: mysql
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER:-finanzas}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-finanzas}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-finanzas}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - finanzas
+
+  web:
+    build:
+      context: .
+    container_name: finanzas-web
+    restart: unless-stopped
+    ports:
+      - "${BIND_HOST:-0.0.0.0}:${WEB_PORT:-3000}:80"
+    depends_on:
+      - api
+    networks:
+      - finanzas
+
+volumes:
+  mysql_data:
+
+networks:
+  finanzas:
+    driver: bridge

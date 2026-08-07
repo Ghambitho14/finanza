@@ -1,8 +1,0 @@
-services:
-  finanzas:
-    build:
-      context: .
-    container_name: finanzas
-    restart: unless-stopped
-    ports:
-      - "3000:80"

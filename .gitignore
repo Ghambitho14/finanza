@@ -1,10 +1,43 @@
+# Dependencies
 node_modules
+.pnp
+.pnp.js
+package-lock.json
+yarn.lock
+npm-shrinkwrap.json
+
+# Build
 dist
-.env.local
+dist-ssr
+*.local
+
+# Environment variables
 .env
-.log
-app/node_modules
-app/dist
-app/.env.local
-app/.env
-app/.log
+.env.*
+!.env.example
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# SQLite (local dev)
+server/data/*.sqlite
+server/data/*.sqlite-*
+server/data/*.db
+server/data/*.db-*

@@ -1,0 +1,42 @@
+{
+  "name": "finanzas",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@11.5.0",
+  "engines": {
+    "node": ">=22.5",
+    "pnpm": ">=11"
+  },
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"pnpm run dev:api\" \"pnpm run dev:web\"",
+    "dev:web": "vite --port 5173",
+    "build": "tsc && vite build",
+    "preview": "vite preview --port 5173",
+    "lint": "tsc --noEmit",
+    "dev:db": "docker compose up -d db",
+    "dev:api": "npm --prefix server run dev",
+    "dev:all": "pnpm run dev",
+    "generate-pwa-assets": "pwa-assets-generator"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.5.0",
+    "recharts": "^2.15.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vite-pwa/assets-generator": "^1.0.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.4",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0",
+    "vite-plugin-pwa": "^1.3.0"
+  }
+}

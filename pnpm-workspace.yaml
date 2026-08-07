@@ -1,0 +1,6 @@
+allowBuilds:
+  esbuild: true
+  sharp: true
+
+# Bloquea versiones publicadas hace menos de 24h (mitiga worms tipo ChainDrop)
+minimumReleaseAge: 1440
