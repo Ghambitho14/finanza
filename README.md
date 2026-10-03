@@ -129,6 +129,10 @@ La app es un sitio estático: puede publicarse en Vercel, Netlify, Cloudflare Pa
 
 Las variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` **se incrustan en el build**, por lo que deben estar definidas al momento de compilar.
 
+### Vercel
+
+El repositorio incluye un [`vercel.json`](vercel.json) con el comando de instalación (pnpm 11), la reescritura de rutas a `index.html` y las cabeceras de caché y seguridad. Basta con importar el repositorio con el directorio raíz `./` y definir `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` en **Settings → Environment Variables**.
+
 ### Docker
 
 El `Dockerfile` compila la app con Node 22 y la sirve con nginx (configuración en [`nginx.conf`](nginx.conf), con caché inmutable para los assets y sin caché para el service worker).
@@ -164,6 +168,7 @@ Recuerda agregar la URL de producción en las Redirect URLs de Supabase.
 ├── Dockerfile
 ├── docker-compose.yml
 ├── nginx.conf
+├── vercel.json
 └── vite.config.ts
 ```
 
