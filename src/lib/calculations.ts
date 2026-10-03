@@ -14,13 +14,14 @@ export const formatMonthLabel = (month: string): string => {
   return new Intl.DateTimeFormat('es-CL', { month: 'long', year: 'numeric' }).format(date)
 }
 
-export const monthOptions = (count = 12): string[] => {
+/** Meses en orden descendente: `future` meses próximos, el actual y `count - 1` pasados. */
+export const monthOptions = (count = 12, future = 0): string[] => {
   const options: string[] = []
   const now = new Date()
   const currentYear = now.getFullYear()
   const currentMonth = now.getMonth()
 
-  for (let i = 0; i < count; i++) {
+  for (let i = -future; i < count; i++) {
     const d = new Date(currentYear, currentMonth - i, 1)
     const y = d.getFullYear()
     const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -137,10 +138,28 @@ export const typeColorClass = (
   }
 }
 
-export const nextMonth = (month: string): string => {
+const shiftMonth = (month: string, delta: number): string => {
   const [year, m] = month.split('-').map(Number)
-  const next = new Date(year, m, 1)
-  const y = next.getFullYear()
-  const mm = String(next.getMonth() + 1).padStart(2, '0')
+  const d = new Date(year, m - 1 + delta, 1)
+  const y = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
   return `${y}-${mm}`
+}
+
+export const nextMonth = (month: string): string => shiftMonth(month, 1)
+
+export const prevMonth = (month: string): string => shiftMonth(month, -1)
+
+/**
+ * Montos en CLP (sin decimales): puntos, comas y espacios se tratan como
+ * separadores de miles, así "400.000" es 400000 y no 400.
+ */
+export const parseAmountInput = (value: string): number => {
+  const digits = value.replace(/\D/g, '')
+  return digits ? Number(digits) : NaN
+}
+
+export const formatAmountInput = (value: string | number): string => {
+  const n = typeof value === 'number' ? Math.round(value) : parseAmountInput(value)
+  return Number.isNaN(n) ? '' : new Intl.NumberFormat('es-CL').format(n)
 }

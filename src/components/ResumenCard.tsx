@@ -46,7 +46,7 @@ export function ResumenCard({ summary }: Props) {
               <span className="text-right font-medium text-txt-primary">
                 {formatCLP(amount)}
               </span>
-              <span className={`mini-bar hidden h-[5px] overflow-hidden rounded bg-bg-elevated-2 sm:block ${colors.bar}`}>
+              <span className="mini-bar hidden h-[5px] overflow-hidden rounded bg-bg-elevated-2 sm:block">
                 <div
                   className={`h-full ${colors.bar}`}
                   style={{ width: `${pct}%` }}

@@ -23,7 +23,7 @@ export function ActivityChart({ transactions, month }: Props) {
 
           return (
             <div
-              key={g.name}
+              key={`${g.type}-${g.name}`}
               className="mb-2.5 grid grid-cols-[90px_1fr_60px] items-center gap-2 font-mono text-xs last:mb-0 sm:grid-cols-[120px_1fr_70px] sm:gap-2.5"
             >
               <span className="truncate text-txt-secondary">{g.name}</span>

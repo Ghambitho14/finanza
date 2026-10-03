@@ -1,5 +1,5 @@
 import { apiFetch, clearToken, setToken } from './api'
-import type { Category, Transaction, AppUser } from '@/types/finance'
+import type { Category, CloneResult, Transaction, TransactionInput, AppUser } from '@/types/finance'
 
 export async function getCategories(): Promise<Category[]> {
   const data = await apiFetch<{ categories: Category[] }>('/categories')
@@ -11,25 +11,17 @@ export async function getTransactions(_ownerId?: string): Promise<Transaction[]>
   return data.transactions
 }
 
-export async function addTransaction(data: {
-  description: string
-  amount: number
-  type: string
-  month: string
-  category_id: string | null
-  recurring: boolean
-  owner_id: string | null
-}): Promise<void> {
+export async function addTransaction(data: TransactionInput): Promise<void> {
   await apiFetch('/transactions', {
     method: 'POST',
-    body: JSON.stringify({
-      description: data.description,
-      amount: data.amount,
-      type: data.type,
-      month: data.month,
-      category_id: data.category_id,
-      recurring: data.recurring,
-    }),
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateTransaction(id: string, data: TransactionInput): Promise<void> {
+  await apiFetch(`/transactions/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
   })
 }
 
@@ -41,8 +33,8 @@ export async function cloneRecurringTransactions(
   fromMonth: string,
   toMonth: string,
   _ownerId?: string,
-): Promise<void> {
-  await apiFetch('/transactions/clone-recurring', {
+): Promise<CloneResult> {
+  return apiFetch<CloneResult>('/transactions/clone-recurring', {
     method: 'POST',
     body: JSON.stringify({ fromMonth, toMonth }),
   })

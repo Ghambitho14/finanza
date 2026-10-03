@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { DatabaseSync } from 'node:sqlite'
+import type { DatabaseSync } from 'node:sqlite'
 import mysql from 'mysql2/promise'
 import type { ResultSetHeader } from 'mysql2'
 
@@ -70,9 +70,14 @@ const SEED_CATEGORIES: { name: string; type: TransactionType }[] = [
 let sqliteDb: DatabaseSync | null = null
 let mysqlPool: mysql.Pool | null = null
 
+/** MySQL rechaza el sufijo `Z` de ISO 8601 en columnas DATETIME (modo estricto). */
+function toMysqlDateTime(date: Date): string {
+  return date.toISOString().slice(0, 23).replace('T', ' ')
+}
+
 function normalizeParams(params: unknown[] = []): SqlParam[] {
   return params.map((p): SqlParam => {
-    if (p instanceof Date) return p.toISOString()
+    if (p instanceof Date) return isSqlite ? p.toISOString() : toMysqlDateTime(p)
     if (typeof p === 'boolean') return p ? 1 : 0
     if (p === undefined) return null
     if (p === null) return null
@@ -124,6 +129,8 @@ export async function waitForDb(maxAttempts = 30): Promise<void> {
   if (isSqlite) {
     const sqlitePath = resolveSqlitePath()
     fs.mkdirSync(path.dirname(sqlitePath), { recursive: true })
+    // Import dinámico: en MySQL no se carga node:sqlite (experimental en Node 22).
+    const { DatabaseSync } = await import('node:sqlite')
     sqliteDb = new DatabaseSync(sqlitePath)
     sqliteDb.exec('PRAGMA journal_mode = WAL')
     sqliteDb.exec('PRAGMA foreign_keys = ON')
@@ -184,7 +191,7 @@ export async function seedCategoriesIfEmpty(): Promise<void> {
   const count = Number(rows[0]?.count ?? 0)
   if (count > 0) return
 
-  const now = new Date().toISOString()
+  const now = new Date()
   for (const cat of SEED_CATEGORIES) {
     const id = crypto.randomUUID()
     await execute(

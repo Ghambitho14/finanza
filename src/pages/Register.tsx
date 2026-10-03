@@ -2,6 +2,8 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 
+const MIN_PASSWORD_LENGTH = 8
+
 export function Register() {
   const navigate = useNavigate()
   const { register } = useAuth()
@@ -21,8 +23,8 @@ export function Register() {
       return
     }
 
-    if (password.length < 4) {
-      setError('La contraseña debe tener al menos 4 caracteres')
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`)
       return
     }
 
@@ -94,7 +96,7 @@ export function Register() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="mínimo 4 caracteres"
+              placeholder={`mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
               autoComplete="new-password"
               className="w-full rounded-md border border-border bg-bg-elevated-2 px-3 py-2 font-mono text-sm text-txt-primary placeholder:text-txt-tertiary focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue focus-visible:outline-offset-1"
             />

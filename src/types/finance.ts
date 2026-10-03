@@ -20,6 +20,20 @@ export interface Transaction {
   categories?: Category | null
 }
 
+export interface TransactionInput {
+  description: string
+  amount: number
+  type: TransactionType
+  month: string
+  category_id: string | null
+  recurring: boolean
+}
+
+export interface CloneResult {
+  cloned: number
+  skipped: number
+}
+
 export interface AppUser {
   id: string
   email: string

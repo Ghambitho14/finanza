@@ -2,6 +2,7 @@ import './env.js'
 import express from 'express'
 import cors from 'cors'
 import { getDbClient, migrateAndSeed, query, waitForDb } from './db.js'
+import { errorHandler } from './middleware/errors.js'
 import authRoutes from './routes/auth.js'
 import categoriesRoutes from './routes/categories.js'
 import transactionsRoutes from './routes/transactions.js'
@@ -33,6 +34,8 @@ async function main() {
   app.use((_req, res) => {
     res.status(404).json({ error: 'No encontrado' })
   })
+
+  app.use(errorHandler)
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`[api] listening on :${PORT} (db=${getDbClient()})`)

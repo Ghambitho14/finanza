@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { query, type CategoryRow } from '../db.js'
 import { requireAuth, type AuthedRequest } from '../middleware/auth.js'
+import { asyncHandler } from '../middleware/errors.js'
 
 const router = Router()
 
@@ -15,11 +16,11 @@ function mapCategory(row: CategoryRow) {
   }
 }
 
-router.get('/', requireAuth, async (_req: AuthedRequest, res) => {
+router.get('/', requireAuth, asyncHandler(async (_req: AuthedRequest, res) => {
   const rows = await query<CategoryRow>(
     'SELECT id, name, type, created_at FROM categories ORDER BY type, name',
   )
   res.json({ categories: rows.map(mapCategory) })
-})
+}))
 
 export default router

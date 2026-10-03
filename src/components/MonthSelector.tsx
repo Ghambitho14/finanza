@@ -6,7 +6,8 @@ interface Props {
 }
 
 export function MonthSelector({ value, onChange }: Props) {
-  const options = monthOptions(24)
+  // 3 meses a futuro para poder planificar (y clonar recurrentes por adelantado)
+  const options = monthOptions(24, 3)
 
   return (
     <select

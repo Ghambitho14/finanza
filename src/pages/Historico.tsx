@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 import { useAuth } from '@/lib/auth'
 import { getTransactions } from '@/lib/db-service'
+import { ApiError } from '@/lib/api'
 import { formatCLP, formatMonthLabel, monthOptions, summaryForMonth } from '@/lib/calculations'
 import type { Transaction } from '@/types/finance'
 
@@ -20,12 +21,18 @@ export function Historico() {
   const { user, logout } = useAuth()
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const load = async () => {
-      const data = await getTransactions(user!.id)
-      setTransactions(data)
-      setLoading(false)
+      try {
+        const data = await getTransactions(user!.id)
+        setTransactions(data)
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'No se pudo cargar el histórico')
+      } finally {
+        setLoading(false)
+      }
     }
 
     load()
@@ -79,6 +86,10 @@ export function Historico() {
       {loading ? (
         <div className="py-10 text-center font-mono text-sm text-txt-tertiary">
           cargando histórico…
+        </div>
+      ) : error ? (
+        <div role="alert" className="rounded-md border border-red bg-red-bg px-4 py-2.5 font-mono text-xs text-red">
+          <span className="font-semibold">error:</span> {error}
         </div>
       ) : (
         <>

@@ -1,8 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ApiError } from '@/lib/api'
+import { ApiError, UNAUTHORIZED_EVENT, getToken } from '@/lib/api'
 import { loginRequest, logoutRequest, meRequest, registerRequest } from '@/lib/db-service'
-import { getToken } from '@/lib/api'
 import type { AppUser } from '@/types/finance'
 
 interface AuthContextType {
@@ -36,6 +35,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     init()
+  }, [])
+
+  useEffect(() => {
+    const onUnauthorized = () => setUser(null)
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
   }, [])
 
   const login = useCallback(async (email: string, password: string): Promise<string | null> => {
