@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-import path from 'path'
+import { fileURLToPath } from 'node:url'
 
 export default defineConfig(({ command }) => ({
   plugins: [
@@ -24,47 +24,22 @@ export default defineConfig(({ command }) => ({
       ],
       manifest: false,
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2}'],
-        navigateFallbackDenylist: [/^\/api/, /manifest\.webmanifest$/, /\.webmanifest$/],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-            },
-          },
-        ],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
+        navigateFallbackDenylist: [/\.webmanifest$/],
       },
     }),
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   server: {
     host: 'localhost',
     port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:4000',
-        changeOrigin: true,
-      },
-    },
   },
   preview: {
     host: 'localhost',
     port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:4000',
-        changeOrigin: true,
-      },
-    },
   },
 }))

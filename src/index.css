@@ -4,19 +4,56 @@
 
 @layer base {
   html {
-    @apply bg-bg;
+    @apply bg-page text-ink antialiased;
+    color-scheme: dark;
   }
   body {
-    @apply min-h-screen font-display;
+    @apply min-h-screen font-sans text-sm;
+  }
+  :focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-accent;
+  }
+  dialog::backdrop {
+    background: rgb(0 0 0 / 0.6);
   }
 }
 
 @layer components {
   .card {
-    @apply mb-5 overflow-hidden rounded-lg border border-border bg-bg-elevated;
+    @apply rounded-xl border border-line bg-surface;
   }
-  .card-head {
-    @apply flex items-center justify-between border-b border-border-muted px-4 py-2.5 font-mono text-sm text-txt-secondary;
+  .card-header {
+    @apply flex items-center justify-between gap-3 border-b border-line-muted px-4 py-3;
+  }
+  .card-title {
+    @apply text-sm font-semibold text-ink;
+  }
+  .field {
+    @apply h-9 rounded-lg border border-line bg-surface-raised px-3 text-sm text-ink placeholder:text-ink-muted transition-colors hover:border-ink-muted/50 disabled:opacity-50;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-medium text-ink-secondary;
+  }
+  .btn {
+    @apply inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-ink text-page hover:bg-ink/85;
+  }
+  .btn-secondary {
+    @apply btn border border-line bg-surface-raised text-ink hover:bg-surface-hover;
+  }
+  .btn-ghost {
+    @apply btn text-ink-secondary hover:bg-surface-hover hover:text-ink;
+  }
+  .btn-danger {
+    @apply btn bg-status-critical text-white hover:bg-status-critical/85;
+  }
+  .icon-btn {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-surface-hover hover:text-ink;
+  }
+  .amount {
+    font-variant-numeric: tabular-nums;
   }
 }
 

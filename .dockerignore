@@ -1,10 +1,11 @@
 node_modules
 dist
 .git
-server
 app
 *.md
 .env
 .env.*
 agent-transcripts
 .cursor
+server
+supabase

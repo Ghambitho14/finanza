@@ -3,7 +3,6 @@ node_modules
 .pnp
 .pnp.js
 package-lock.json
-!server/package-lock.json
 yarn.lock
 npm-shrinkwrap.json
 
@@ -37,8 +36,15 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# SQLite (local dev)
-server/data/*.sqlite
-server/data/*.sqlite-*
-server/data/*.db
-server/data/*.db-*
+# Datos locales (no forman parte del proyecto)
+server/
+
+# Herramientas de desarrollo con IA (config MCP, Claude, Cursor)
+.mcp.json
+.claude/
+.cursor/
+agent-transcripts/
+
+# Esquema SQL, plantillas de correo y scripts de configuración (se mantienen fuera del repo)
+supabase/
+scripts/

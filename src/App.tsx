@@ -1,42 +1,53 @@
-import { useEffect, type ReactNode } from 'react'
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import { Dashboard } from '@/pages/Dashboard'
-import { Historico } from '@/pages/Historico'
-import { Login } from '@/pages/Login'
-import { Register } from '@/pages/Register'
+import { lazy, Suspense } from 'react'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { Layout } from '@/components/Layout'
+import { TransactionEditorProvider } from '@/components/TransactionEditor'
 import { useAuth } from '@/lib/auth'
+import { FinanceProvider } from '@/lib/finance-store'
+import { Categorias } from '@/pages/Categorias'
+import { Entrar } from '@/pages/Entrar'
+import { Movimientos } from '@/pages/Movimientos'
+import { NuevaClave } from '@/pages/NuevaClave'
+import { RecuperarClave } from '@/pages/RecuperarClave'
+import { Registro } from '@/pages/Registro'
+import { Resumen } from '@/pages/Resumen'
 
-function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth()
-  const navigate = useNavigate()
+// Recharts pesa más que el resto de la app: solo se descarga al abrir el histórico
+const Historico = lazy(() => import('@/pages/Historico').then((m) => ({ default: m.Historico })))
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login', { replace: true })
-    }
-  }, [user, loading, navigate])
+const loadingScreen = <p className="py-20 text-center text-ink-muted">Cargando…</p>
 
-  if (loading) {
+export default function App() {
+  const { session, loading, recovering } = useAuth()
+
+  if (loading) return loadingScreen
+  if (recovering) return <NuevaClave />
+
+  if (!session) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="font-mono text-sm text-txt-tertiary">cargando…</div>
-      </div>
+      <Routes>
+        <Route path="entrar" element={<Entrar />} />
+        <Route path="registro" element={<Registro />} />
+        <Route path="recuperar" element={<RecuperarClave />} />
+        <Route path="*" element={<Navigate to="/entrar" replace />} />
+      </Routes>
     )
   }
 
-  if (!user) return null
-
-  return <>{children}</>
-}
-
-export default function App() {
+  // `key`: al cambiar de usuario, los datos del anterior no quedan en memoria
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/historico" element={<ProtectedRoute><Historico /></ProtectedRoute>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <FinanceProvider key={session.user.id}>
+      <TransactionEditorProvider>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route index element={<Resumen />} />
+            <Route path="movimientos" element={<Movimientos />} />
+            <Route path="historico" element={<Suspense fallback={loadingScreen}><Historico /></Suspense>} />
+            <Route path="categorias" element={<Categorias />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </TransactionEditorProvider>
+    </FinanceProvider>
   )
 }

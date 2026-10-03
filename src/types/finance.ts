@@ -4,6 +4,8 @@ export interface Category {
   id: string
   name: string
   type: TransactionType
+  /** Presupuesto mensual en CLP (solo gastos). */
+  budget: number | null
   created_at: string
 }
 
@@ -13,32 +15,34 @@ export interface Transaction {
   description: string
   amount: number
   type: TransactionType
-  month: string
+  /** YYYY-MM-DD */
+  date: string
   recurring: boolean
   created_at: string
-  owner_id?: string
-  categories?: Category | null
 }
 
-export interface TransactionInput {
-  description: string
-  amount: number
+export type TransactionInput = Omit<Transaction, 'id' | 'created_at'>
+
+export interface CategoryInput {
+  name: string
   type: TransactionType
-  month: string
-  category_id: string | null
-  recurring: boolean
+  budget: number | null
 }
 
 export interface CloneResult {
   cloned: number
-  skipped: number
+  transactions: Transaction[]
 }
 
-export interface AppUser {
-  id: string
-  email: string
-  name: string
-  created_at: string
+/** Fila de importación: la categoría va por nombre y se crea si no existe. */
+export interface ImportRow extends Omit<TransactionInput, 'category_id'> {
+  category: string | null
+}
+
+export interface ImportResult {
+  imported: number
+  skipped: number
+  categoriesCreated: number
 }
 
 export interface MonthSummary {
@@ -46,10 +50,9 @@ export interface MonthSummary {
   fixed: number
   variable: number
   savings: number
-  balance: number
-}
-
-export interface CategorySummary {
-  category: Category
-  amount: number
+  expenses: number
+  /** Lo que queda del ingreso tras gastos y ahorro. */
+  available: number
+  /** Ahorro / ingresos, entre 0 y 1 (null si no hay ingresos). */
+  savingsRate: number | null
 }
