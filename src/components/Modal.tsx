@@ -42,7 +42,7 @@ export function Modal({ open, title, description, onClose, children, size = 'md'
         if (e.target === ref.current) onClose()
       }}
       aria-labelledby="modal-title"
-      className={`m-auto w-[calc(100%-2rem)] rounded-xl border border-line bg-surface p-0 text-ink shadow-2xl shadow-black/50 ${
+      className={`m-auto w-[calc(100%-2rem)] rounded-xl border border-line bg-surface p-0 text-left text-ink shadow-2xl shadow-black/50 ${
         size === 'sm' ? 'max-w-sm' : 'max-w-lg'
       }`}
     >

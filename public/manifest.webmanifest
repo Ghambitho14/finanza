@@ -1,7 +1,11 @@
 {
+  "id": "/",
   "name": "Finanzas",
   "short_name": "Finanzas",
-  "description": "Ingresos, gastos fijos, gastos variables y ahorro",
+  "description": "Ingresos, gastos fijos, gastos variables y ahorro, mes a mes.",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["finance", "productivity"],
   "theme_color": "#0e0f11",
   "background_color": "#0e0f11",
   "display": "standalone",
@@ -29,6 +33,19 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nuevo movimiento",
+      "short_name": "Nuevo",
+      "url": "/?nuevo=1",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Movimientos",
+      "url": "/movimientos",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

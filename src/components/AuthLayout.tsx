@@ -1,5 +1,6 @@
 import { useState, type InputHTMLAttributes, type ReactNode } from 'react'
 import { Eye, EyeOff, Wallet } from 'lucide-react'
+import { InstallAppButton } from '@/components/InstallApp'
 
 interface Props {
   title: string
@@ -22,6 +23,9 @@ export function AuthLayout({ title, subtitle, children, footer }: Props) {
         </div>
         <div className="card p-5">{children}</div>
         {footer && <div className="mt-5 text-center text-sm text-ink-secondary">{footer}</div>}
+        <div className="mt-8 text-center">
+          <InstallAppButton variant="link" />
+        </div>
       </div>
     </div>
   )

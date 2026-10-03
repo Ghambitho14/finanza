@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ToastProvider } from '@/components/Toaster'
 import { AuthProvider } from '@/lib/auth'
+import '@/lib/install' // escucha el aviso de instalación desde el primer momento
 import './index.css'
 import App from './App'
 

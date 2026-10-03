@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
 import { LogOut, Plus, Wallet } from 'lucide-react'
+import { InstallAppButton } from '@/components/InstallApp'
 import { useToast } from '@/components/Toaster'
 import { useTransactionEditor } from '@/components/TransactionEditor'
 import { authErrorMessage, useAuth } from '@/lib/auth'
@@ -22,11 +23,23 @@ export function Layout() {
   const { openNew } = useTransactionEditor()
   const { status, loadError, reload } = useFinance()
   const { pathname } = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   // Cada sección empieza arriba (el router conserva el scroll entre páginas)
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [pathname])
+
+  // Acceso directo de la app instalada (?nuevo=1): abre un movimiento nuevo
+  // cuando los datos ya cargaron, y limpia la URL
+  useEffect(() => {
+    if (status !== 'ready' || !searchParams.has('nuevo')) return
+    setSearchParams((params) => {
+      params.delete('nuevo')
+      return params
+    }, { replace: true })
+    openNew()
+  }, [status, searchParams, setSearchParams, openNew])
 
   // Atajo: "n" abre un movimiento nuevo desde cualquier página
   useEffect(() => {
@@ -149,6 +162,7 @@ function UserMenu() {
       {open && (
         <div role="menu" className="absolute right-0 top-11 z-30 w-64 rounded-lg border border-line bg-surface-raised p-1 shadow-xl shadow-black/40">
           <p className="truncate px-3 py-2 text-xs text-ink-muted">{email}</p>
+          <InstallAppButton variant="menu" onDone={() => setOpen(false)} />
           <button
             role="menuitem"
             onClick={handleSignOut}

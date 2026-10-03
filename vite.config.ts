@@ -12,7 +12,6 @@ export default defineConfig(({ command }) => ({
       devOptions: {
         enabled: false,
       },
-      pwaAssets: { config: true },
       includeAssets: [
         'favicon.ico',
         'manifest.webmanifest',
