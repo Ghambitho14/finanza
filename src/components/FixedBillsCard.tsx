@@ -4,6 +4,7 @@ import { Check, Plus } from 'lucide-react'
 import { useToast } from '@/components/Toaster'
 import { toInput, useTransactionEditor } from '@/components/TransactionEditor'
 import { TransactionRow } from '@/components/TransactionRow'
+import { TypeIcon } from '@/components/ui/TypeIcon'
 import { errorMessage } from '@/lib/api'
 import { byDateAsc, defaultDateForMonth, type FixedBill } from '@/lib/calculations'
 import { useFinance } from '@/lib/finance-store'
@@ -95,13 +96,16 @@ export function FixedBillsCard({ month, bills, others }: Props) {
   return (
     <section className="card">
       <div className="card-header">
-        <div>
-          <h2 className="card-title">Gastos fijos</h2>
-          <p className="mt-0.5 text-xs text-ink-muted">
-            {bills.length > 0
-              ? `${paidCount} de ${bills.length} ${bills.length === 1 ? 'cuenta pagada' : 'cuentas pagadas'}`
-              : 'Tus cuentas del mes: arriendo, luz, internet…'}
-          </p>
+        <div className="flex min-w-0 items-center gap-3">
+          <TypeIcon type="fixed" />
+          <div className="min-w-0">
+            <h2 className="card-title">Cuentas del mes</h2>
+            <p className="mt-0.5 text-xs text-ink-muted">
+              {bills.length > 0
+                ? `${paidCount} de ${bills.length} ${bills.length === 1 ? 'cuenta pagada' : 'cuentas pagadas'}`
+                : 'Arriendo, luz, internet…'}
+            </p>
+          </div>
         </div>
         <span className="amount whitespace-nowrap text-sm font-semibold">
           {formatCLP(paidTotal)}

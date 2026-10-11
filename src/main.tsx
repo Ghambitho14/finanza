@@ -4,7 +4,9 @@ import { BrowserRouter } from 'react-router-dom'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ToastProvider } from '@/components/Toaster'
 import { AuthProvider } from '@/lib/auth'
+import { ThemeProvider } from '@/lib/theme-mode'
 import '@/lib/install' // escucha el aviso de instalación desde el primer momento
+import '@fontsource-variable/inter'
 import './index.css'
 import App from './App'
 
@@ -41,13 +43,15 @@ function mountApp(): void {
   createRoot(rootEl).render(
     <StrictMode>
       <ErrorBoundary>
-        <BrowserRouter>
-          <ToastProvider>
-            <AuthProvider>
-              <App />
-            </AuthProvider>
-          </ToastProvider>
-        </BrowserRouter>
+        <ThemeProvider>
+          <BrowserRouter>
+            <ToastProvider>
+              <AuthProvider>
+                <App />
+              </AuthProvider>
+            </ToastProvider>
+          </BrowserRouter>
+        </ThemeProvider>
       </ErrorBoundary>
     </StrictMode>,
   )

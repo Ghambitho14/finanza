@@ -5,22 +5,31 @@
 @layer base {
   html {
     @apply bg-page text-ink antialiased;
-    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
   }
   body {
     @apply min-h-screen font-sans text-sm;
+    /* Inter: 1 y l distinguibles, cifras más legibles */
+    font-feature-settings: 'cv11', 'ss01';
   }
   :focus-visible {
     @apply outline outline-2 outline-offset-2 outline-accent;
   }
   dialog::backdrop {
     background: rgb(0 0 0 / 0.6);
+    backdrop-filter: blur(2px);
+  }
+  [data-theme='light'] dialog::backdrop {
+    background: rgb(15 18 25 / 0.35);
   }
 }
 
 @layer components {
   .card {
     @apply rounded-xl border border-line bg-surface;
+  }
+  [data-theme='light'] .card {
+    box-shadow: 0 1px 2px rgb(16 24 40 / 0.04);
   }
   .card-header {
     @apply flex items-center justify-between gap-3 border-b border-line-muted px-4 py-3;
@@ -29,13 +38,13 @@
     @apply text-sm font-semibold text-ink;
   }
   .field {
-    @apply h-9 rounded-lg border border-line bg-surface-raised px-3 text-sm text-ink placeholder:text-ink-muted transition-colors hover:border-ink-muted/50 disabled:opacity-50;
+    @apply h-10 rounded-lg border border-line bg-surface-raised px-3 text-sm text-ink placeholder:text-ink-muted transition-colors hover:border-ink-muted/50 disabled:opacity-50 sm:h-9;
   }
   .label {
     @apply mb-1.5 block text-xs font-medium text-ink-secondary;
   }
   .btn {
-    @apply inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:h-9;
   }
   .btn-primary {
     @apply btn bg-ink text-page hover:bg-ink/85;
@@ -51,6 +60,14 @@
   }
   .icon-btn {
     @apply inline-flex h-8 w-8 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-surface-hover hover:text-ink;
+  }
+  /* Opción tipo píldora (categorías, fechas rápidas); marcada con aria-pressed o :checked */
+  .chip {
+    @apply inline-flex h-8 cursor-pointer select-none items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-surface px-3 text-[13px] text-ink-secondary transition-colors hover:border-ink-muted/60 hover:text-ink has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent;
+  }
+  .chip[aria-pressed='true'],
+  .chip:has(:checked) {
+    @apply border-ink bg-ink font-medium text-page hover:text-page;
   }
   .amount {
     font-variant-numeric: tabular-nums;

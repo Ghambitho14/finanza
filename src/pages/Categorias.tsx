@@ -3,6 +3,8 @@ import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { AmountInput } from '@/components/AmountInput'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { useToast } from '@/components/Toaster'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { TypeIcon } from '@/components/ui/TypeIcon'
 import { errorMessage } from '@/lib/api'
 import { currentMonth, inMonth } from '@/lib/calculations'
 import { useFinance } from '@/lib/finance-store'
@@ -48,15 +50,13 @@ export function Categorias() {
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">Categorías</h1>
-        <p className="mt-1 text-ink-secondary">
-          Organiza tus movimientos y define cuánto quieres gastar al mes en cada categoría.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Categorías"
+        description="Organiza tus movimientos, registra tus cuentas fijas y define cuánto quieres gastar al mes."
+      />
 
-      <div className="grid items-start gap-5 lg:grid-cols-2">
+      <div className="grid items-start gap-6 xl:grid-cols-2">
         {TYPE_ORDER.map((type) => (
           <TypeSection
             key={type}
@@ -114,9 +114,9 @@ function TypeSection({ type, categories, usage, spentThisMonth, onDelete }: Sect
   return (
     <section className="card">
       <div className="card-header">
-        <h2 className="card-title flex items-center gap-2">
-          <span className={`h-2 w-2 rounded-sm ${TYPE_META[type].dot}`} aria-hidden />
-          {TYPE_META[type].plural}
+        <h2 className="card-title flex items-center gap-2.5">
+          <TypeIcon type={type} size="sm" />
+          {type === 'fixed' ? 'Cuentas fijas' : TYPE_META[type].plural}
         </h2>
         <span className="text-xs text-ink-muted">
           {categories.length} {categories.length === 1 ? 'categoría' : 'categorías'}

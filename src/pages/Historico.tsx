@@ -1,10 +1,15 @@
 import { useMemo, useState } from 'react'
 import { Bar, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { TooltipProps } from 'recharts'
+import { ChartColumn, Percent, TrendingDown, Trophy } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SegmentedControl } from '@/components/ui/SegmentedControl'
+import { StatCard } from '@/components/ui/StatCard'
 import { currentMonth, monthRange, summaryForMonth } from '@/lib/calculations'
 import { useFinance } from '@/lib/finance-store'
 import { formatCLP, formatCompactCLP, formatMonthLabel, formatMonthShort, formatPercent } from '@/lib/format'
-import { colors } from '@/lib/theme'
+import { useTheme } from '@/lib/theme-mode'
 import { TYPE_META } from '@/lib/transaction-types'
 import type { MonthSummary, TransactionType } from '@/types/finance'
 
@@ -36,7 +41,7 @@ function stackSegment(key: TransactionType) {
     const top = [...STACK].reverse().find((k) => payload[k] > 0)
     const r = key === top ? Math.min(4, height, width / 2) : 0
     const d = `M${x},${y + height} L${x},${y + r} Q${x},${y} ${x + r},${y} L${x + width - r},${y} Q${x + width},${y} ${x + width},${y + r} L${x + width},${y + height} Z`
-    return <path d={d} fill={fill} stroke={colors.surface.DEFAULT} strokeWidth={2} />
+    return <path d={d} fill={fill} className="stroke-surface" strokeWidth={2} />
   }
 }
 
@@ -68,6 +73,7 @@ function ChartTooltip({ active, payload }: TooltipProps<number, string>) {
 
 export function Historico() {
   const { transactions } = useFinance()
+  const { palette } = useTheme()
   const [range, setRange] = useState<Range>(12)
 
   const rows: Row[] = useMemo(() => {
@@ -89,42 +95,49 @@ export function Historico() {
   const best = active.length ? active.reduce((a, b) => (b.available > a.available ? b : a)) : null
 
   const tiles = [
-    { label: 'Gasto promedio al mes', value: formatCLP(Math.round(avg((r) => r.expenses))) },
-    { label: 'Ahorro promedio al mes', value: formatCLP(Math.round(avg((r) => r.savings))) },
-    { label: 'Tasa de ahorro', value: totalIncome > 0 ? formatPercent(totalSavings / totalIncome) : '—' },
-    { label: 'Mejor mes', value: best ? formatMonthLabel(best.month) : '—', sub: best ? `${formatCLP(best.available)} disponible` : undefined },
+    { label: 'Gasto promedio al mes', icon: TrendingDown, tint: TYPE_META.variable.tint, value: formatCLP(Math.round(avg((r) => r.expenses))) },
+    { label: 'Ahorro promedio al mes', icon: TYPE_META.savings.icon, tint: TYPE_META.savings.tint, value: formatCLP(Math.round(avg((r) => r.savings))) },
+    { label: 'Tasa de ahorro', icon: Percent, tint: 'bg-accent/10 text-accent', value: totalIncome > 0 ? formatPercent(totalSavings / totalIncome) : '—' },
+    { label: 'Mejor mes', icon: Trophy, tint: TYPE_META.income.tint, value: best ? formatMonthLabel(best.month) : '—', sub: best ? `${formatCLP(best.available)} disponible` : undefined },
   ]
 
   const header = (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <h1 className="text-xl font-semibold tracking-tight">Histórico</h1>
-      <RangePicker value={range} onChange={setRange} />
-    </div>
+    <PageHeader
+      title="Histórico"
+      description="Cómo evolucionan tus ingresos, gastos y ahorro mes a mes."
+      actions={
+        <SegmentedControl
+          label="Período"
+          options={RANGES.map((r) => ({ value: r, label: `${r} meses` }))}
+          value={range}
+          onChange={setRange}
+        />
+      }
+    />
   )
 
   if (rows.length === 0) {
     return (
-      <div className="space-y-5">
+      <div className="space-y-6">
         {header}
-        <div className="card px-4 py-16 text-center">
-          <p className="font-medium">Aún no hay datos para mostrar</p>
-          <p className="mt-1 text-ink-secondary">Registra tus movimientos y aquí verás cómo evolucionan mes a mes.</p>
+        <div className="card">
+          <EmptyState icon={ChartColumn} title="Aún no hay datos para mostrar">
+            Registra tus movimientos y aquí verás cómo evolucionan mes a mes.
+          </EmptyState>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {header}
 
       <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {tiles.map((t) => (
-          <div key={t.label} className="card p-4">
-            <dt className="text-xs text-ink-secondary">{t.label}</dt>
-            <dd className="mt-1 text-lg font-semibold tracking-tight">{t.value}</dd>
+          <StatCard key={t.label} icon={t.icon} tint={t.tint} label={t.label} value={t.value}>
             {t.sub && <dd className="mt-0.5 text-xs text-ink-muted">{t.sub}</dd>}
-          </div>
+          </StatCard>
         ))}
       </dl>
 
@@ -151,29 +164,29 @@ export function Historico() {
         <div className="h-72" role="img" aria-label="Gráfico mensual de ingresos, gastos y ahorro. Los valores están en la tabla de abajo.">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={rows} margin={{ top: 8, right: 4, bottom: 0, left: 4 }} barCategoryGap="30%">
-              <CartesianGrid vertical={false} stroke={colors.line.muted} />
+              <CartesianGrid vertical={false} stroke={palette.line.muted} />
               <XAxis
                 dataKey="label"
-                tick={{ fill: colors.ink.muted, fontSize: 11 }}
+                tick={{ fill: palette.ink.muted, fontSize: 11 }}
                 tickLine={false}
-                axisLine={{ stroke: colors.line.DEFAULT }}
+                axisLine={{ stroke: palette.line.DEFAULT }}
                 interval="preserveStartEnd"
                 minTickGap={8}
               />
               <YAxis
-                tick={{ fill: colors.ink.muted, fontSize: 11 }}
+                tick={{ fill: palette.ink.muted, fontSize: 11 }}
                 tickFormatter={formatCompactCLP}
                 tickLine={false}
                 axisLine={false}
                 width={64}
               />
-              <Tooltip content={<ChartTooltip />} cursor={{ fill: colors.surface.hover, opacity: 0.6 }} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: palette.surface.hover, opacity: 0.6 }} />
               {STACK.map((key) => (
                 <Bar
                   key={key}
                   dataKey={key}
                   stackId="out"
-                  fill={colors.series[key]}
+                  fill={palette.series[key]}
                   maxBarSize={24}
                   shape={stackSegment(key)}
                   isAnimationActive={false}
@@ -182,10 +195,10 @@ export function Historico() {
               <Line
                 dataKey="income"
                 type="linear"
-                stroke={colors.series.income}
+                stroke={palette.series.income}
                 strokeWidth={2}
-                dot={{ r: 4, fill: colors.series.income, stroke: colors.surface.DEFAULT, strokeWidth: 2 }}
-                activeDot={{ r: 5, fill: colors.series.income, stroke: colors.surface.DEFAULT, strokeWidth: 2 }}
+                dot={{ r: 4, fill: palette.series.income, stroke: palette.surface.DEFAULT, strokeWidth: 2 }}
+                activeDot={{ r: 5, fill: palette.series.income, stroke: palette.surface.DEFAULT, strokeWidth: 2 }}
                 isAnimationActive={false}
               />
             </ComposedChart>
@@ -228,25 +241,6 @@ export function Historico() {
           </table>
         </div>
       </section>
-    </div>
-  )
-}
-
-function RangePicker({ value, onChange }: { value: Range; onChange: (range: Range) => void }) {
-  return (
-    <div className="flex rounded-lg border border-line bg-surface-raised p-0.5" role="group" aria-label="Período">
-      {RANGES.map((r) => (
-        <button
-          key={r}
-          onClick={() => onChange(r)}
-          aria-pressed={value === r}
-          className={`rounded-md px-3 py-1 text-sm transition-colors ${
-            value === r ? 'bg-surface-hover font-medium text-ink' : 'text-ink-secondary hover:text-ink'
-          }`}
-        >
-          {r} meses
-        </button>
-      ))}
     </div>
   )
 }

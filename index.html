@@ -14,6 +14,18 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>Finanzas</title>
+    <script>
+      // Aplica el tema antes del primer pintado para que no parpadee (ver src/lib/theme-mode.tsx)
+      (function () {
+        var theme = null
+        try { theme = localStorage.getItem('finanzas:tema') } catch (e) {}
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        document.documentElement.dataset.theme = theme
+        if (theme === 'light') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f5f6f8')
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

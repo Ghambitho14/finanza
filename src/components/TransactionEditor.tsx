@@ -5,7 +5,7 @@ import { Modal } from '@/components/Modal'
 import { useToast } from '@/components/Toaster'
 import { errorMessage } from '@/lib/api'
 import { useFinance } from '@/lib/finance-store'
-import { formatAmountInput, parseAmountInput, todayISO } from '@/lib/format'
+import { formatAmountInput, parseAmountInput, parseISODate, toISODate, todayISO } from '@/lib/format'
 import { TYPE_META, TYPE_ORDER, recurringByDefault } from '@/lib/transaction-types'
 import type { Transaction, TransactionInput, TransactionType } from '@/types/finance'
 
@@ -102,8 +102,6 @@ function TransactionForm({ state, onDone }: { state: EditorState; onDone: () => 
   const defaults = state.mode === 'new' ? state.defaults : {}
   const initialType = editing?.type ?? defaults.type ?? 'variable'
   const initialAmount = editing?.amount ?? defaults.amount
-  // Si llega prellenado (p. ej. pagar una cuenta), lo usual es ajustar el monto
-  const focusAmount = !editing && defaults.amount !== undefined
 
   const [type, setType] = useState<TransactionType>(initialType)
   const [description, setDescription] = useState(editing?.description ?? defaults.description ?? '')
@@ -161,33 +159,49 @@ function TransactionForm({ state, onDone }: { state: EditorState; onDone: () => 
     if (editing && (await deleteWithUndo(editing))) onDone()
   }
 
+  const today = todayISO()
+  const yesterday = shiftDays(today, -1)
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
       <fieldset>
-        <legend className="label">Tipo</legend>
-        <div className="grid grid-cols-2 gap-1 rounded-lg border border-line bg-surface-raised p-1 sm:grid-cols-4">
-          {TYPE_ORDER.map((t) => (
-            <label
-              key={t}
-              className={`flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13px] transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent ${
-                type === t ? 'bg-surface-hover font-medium text-ink' : 'text-ink-secondary hover:text-ink'
-              }`}
-            >
-              <input
-                type="radio"
-                name="type"
-                value={t}
-                checked={type === t}
-                onChange={() => handleTypeChange(t)}
-                className="sr-only"
-              />
-              <span className={`h-2 w-2 rounded-full ${TYPE_META[t].dot}`} aria-hidden />
-              {TYPE_META[t].label}
-            </label>
-          ))}
+        <legend className="sr-only">Tipo de movimiento</legend>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {TYPE_ORDER.map((t) => {
+            const Icon = TYPE_META[t].icon
+            const selected = type === t
+            return (
+              <label
+                key={t}
+                className={`flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center text-[13px] transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent ${
+                  selected
+                    ? 'border-ink bg-surface-raised font-medium text-ink'
+                    : 'border-line text-ink-secondary hover:border-ink-muted/60 hover:text-ink'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="type"
+                  value={t}
+                  checked={selected}
+                  onChange={() => handleTypeChange(t)}
+                  className="sr-only"
+                />
+                <span className={`grid h-8 w-8 place-items-center rounded-lg ${TYPE_META[t].tint}`} aria-hidden>
+                  <Icon size={16} />
+                </span>
+                {TYPE_META[t].label}
+              </label>
+            )
+          })}
         </div>
-        <p className="mt-1.5 text-xs text-ink-muted">{TYPE_META[type].hint}</p>
+        <p className="mt-2 text-xs text-ink-muted">{TYPE_META[type].hint}</p>
       </fieldset>
+
+      <div>
+        <label htmlFor="tx-amount" className="label">Monto</label>
+        <AmountInput id="tx-amount" size="lg" value={amount} onChange={setAmount} placeholder="0" data-autofocus />
+      </div>
 
       <div>
         <label htmlFor="tx-description" className="label">Descripción</label>
@@ -195,77 +209,104 @@ function TransactionForm({ state, onDone }: { state: EditorState; onDone: () => 
           id="tx-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder={type === 'variable' ? 'Ej: chocolate en el kiosco' : type === 'fixed' ? 'Ej: arriendo' : ''}
+          placeholder={DESCRIPTION_EXAMPLES[type]}
           maxLength={200}
-          data-autofocus={focusAmount ? undefined : true}
           autoComplete="off"
           className="field w-full"
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label htmlFor="tx-amount" className="label">Monto</label>
-          <AmountInput id="tx-amount" value={amount} onChange={setAmount} placeholder="0" data-autofocus={focusAmount ? true : undefined} />
+      <fieldset>
+        <legend className="label">Categoría</legend>
+        <div className="flex flex-wrap gap-1.5">
+          <label className="chip">
+            <input type="radio" name="category" checked={categoryId === ''} onChange={() => setCategoryId('')} className="sr-only" />
+            Sin categoría
+          </label>
+          {typeCategories.map((c) => (
+            <label key={c.id} className="chip">
+              <input
+                type="radio"
+                name="category"
+                checked={categoryId === c.id}
+                onChange={() => setCategoryId(c.id)}
+                className="sr-only"
+              />
+              {c.name}
+            </label>
+          ))}
         </div>
-        <div>
-          <label htmlFor="tx-date" className="label">Fecha</label>
+      </fieldset>
+
+      <fieldset>
+        <legend className="label">Fecha</legend>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button type="button" onClick={() => setDate(today)} aria-pressed={date === today} className="chip">Hoy</button>
+          <button type="button" onClick={() => setDate(yesterday)} aria-pressed={date === yesterday} className="chip">Ayer</button>
           <input
             id="tx-date"
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="field w-full"
+            aria-label="Otra fecha"
+            className="field h-8 sm:h-8"
           />
         </div>
-      </div>
+      </fieldset>
 
-      <div>
-        <label htmlFor="tx-category" className="label">Categoría</label>
-        <select
-          id="tx-category"
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          className="field w-full"
-        >
-          <option value="">Sin categoría</option>
-          {typeCategories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-      </div>
-
-      <label className="flex cursor-pointer items-start gap-2.5">
-        <input
-          type="checkbox"
-          checked={recurring}
-          onChange={(e) => setRecurring(e.target.checked)}
-          className="mt-0.5 h-4 w-4 accent-accent"
-        />
-        <span>
+      <div className="flex items-center justify-between gap-4 rounded-xl border border-line px-4 py-3">
+        <span id="tx-recurring-label">
           <span className="block text-sm text-ink">Se repite cada mes</span>
           <span className="block text-xs text-ink-muted">Podrás copiarlo al mes siguiente con un clic.</span>
         </span>
-      </label>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={recurring}
+          aria-labelledby="tx-recurring-label"
+          onClick={() => setRecurring((r) => !r)}
+          className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${recurring ? 'bg-accent' : 'bg-surface-hover ring-1 ring-inset ring-line'}`}
+        >
+          <span
+            className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${recurring ? 'translate-x-5' : ''}`}
+            aria-hidden
+          />
+        </button>
+      </div>
 
       {error && (
         <p role="alert" className="text-sm text-negative">{error}</p>
       )}
 
-      <div className="flex items-center gap-2 border-t border-line-muted pt-4">
+      {/* Fijo abajo: en el teléfono el formulario puede ser más alto que la pantalla */}
+      <div className="sticky bottom-0 -mx-5 flex items-center gap-2 border-t border-line-muted bg-surface px-5 pt-4 sm:static sm:mx-0 sm:px-0">
         {editing && (
-          <button type="button" onClick={handleDelete} className="btn-ghost text-ink-secondary hover:text-negative">
+          <button type="button" onClick={handleDelete} className="btn-ghost px-2.5 text-ink-secondary hover:text-negative">
             <Trash2 size={15} aria-hidden />
             Eliminar
           </button>
         )}
         <div className="ml-auto flex gap-2">
           <button type="button" onClick={onDone} className="btn-ghost">Cancelar</button>
-          <button type="submit" disabled={saving} className="btn-primary">
-            {saving ? 'Guardando…' : editing ? 'Guardar cambios' : 'Agregar'}
+          <button type="submit" disabled={saving} className="btn-primary min-w-[7rem]">
+            {saving ? 'Guardando…' : editing ? 'Guardar cambios' : `Agregar ${TYPE_META[type].label.toLowerCase()}`}
           </button>
         </div>
       </div>
     </form>
   )
+}
+
+const DESCRIPTION_EXAMPLES: Record<TransactionType, string> = {
+  income: 'Ej: sueldo',
+  fixed: 'Ej: arriendo',
+  variable: 'Ej: almuerzo, supermercado',
+  savings: 'Ej: fondo de emergencia',
+}
+
+/** Fecha ISO desplazada en días (en hora local). */
+function shiftDays(date: string, days: number): string {
+  const d = parseISODate(date)
+  d.setDate(d.getDate() + days)
+  return toISODate(d)
 }

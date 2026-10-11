@@ -3,10 +3,12 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath } from 'node:url'
 
-export default defineConfig(({ command }) => ({
+export default defineConfig(({ command, mode }) => ({
   plugins: [
     react(),
     VitePWA({
+      // En la app nativa (--mode app) no hay service worker: Capacitor ya sirve los archivos locales
+      disable: mode === 'app',
       registerType: 'autoUpdate',
       injectRegister: command === 'serve' ? false : 'auto',
       devOptions: {
@@ -23,7 +25,8 @@ export default defineConfig(({ command }) => ({
       ],
       manifest: false,
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
+        // De la fuente basta el subconjunto latino (español); el resto se baja solo si hace falta
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}', '**/inter-latin-wght-normal-*.woff2'],
         navigateFallbackDenylist: [/\.webmanifest$/],
       },
     }),

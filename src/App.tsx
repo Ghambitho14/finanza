@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { TransactionEditorProvider } from '@/components/TransactionEditor'
+import { PageSkeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/lib/auth'
 import { FinanceProvider } from '@/lib/finance-store'
 import { Categorias } from '@/pages/Categorias'
@@ -15,7 +16,11 @@ import { Resumen } from '@/pages/Resumen'
 // Recharts pesa más que el resto de la app: solo se descarga al abrir el histórico
 const Historico = lazy(() => import('@/pages/Historico').then((m) => ({ default: m.Historico })))
 
-const loadingScreen = <p className="py-20 text-center text-ink-muted">Cargando…</p>
+const loadingScreen = (
+  <div className="grid min-h-[60vh] place-items-center" role="status" aria-label="Cargando">
+    <span className="h-6 w-6 animate-spin rounded-full border-2 border-line border-t-ink" />
+  </div>
+)
 
 export default function App() {
   const { session, loading, recovering } = useAuth()
@@ -42,7 +47,7 @@ export default function App() {
           <Route element={<Layout />}>
             <Route index element={<Resumen />} />
             <Route path="movimientos" element={<Movimientos />} />
-            <Route path="historico" element={<Suspense fallback={loadingScreen}><Historico /></Suspense>} />
+            <Route path="historico" element={<Suspense fallback={<PageSkeleton />}><Historico /></Suspense>} />
             <Route path="categorias" element={<Categorias />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

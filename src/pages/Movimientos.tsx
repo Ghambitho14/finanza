@@ -1,9 +1,13 @@
 import { useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Download, Search, Upload } from 'lucide-react'
+import { ArrowLeftRight, Download, Inbox, Plus, Search, SearchX, TrendingDown, Upload, X } from 'lucide-react'
 import { Modal } from '@/components/Modal'
 import { useToast } from '@/components/Toaster'
+import { useTransactionEditor } from '@/components/TransactionEditor'
 import { TransactionRow } from '@/components/TransactionRow'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatCard } from '@/components/ui/StatCard'
 import { errorMessage } from '@/lib/api'
 import { byDateDesc, currentMonth, monthOf, prevMonth, shiftMonth, summarize } from '@/lib/calculations'
 import { downloadText, parseImportCSV, transactionsToCSV, type ParsedImport } from '@/lib/csv'
@@ -40,6 +44,7 @@ const normalize = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLo
 
 export function Movimientos() {
   const { transactions, categories, categoryById } = useFinance()
+  const { openNew } = useTransactionEditor()
   const [params, setParams] = useSearchParams()
   const [visible, setVisible] = useState(PAGE_SIZE)
 
@@ -76,62 +81,91 @@ export function Movimientos() {
   const hasFilters = !!(query || type || categoryId || period !== 'todo')
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold tracking-tight">Movimientos</h1>
-        <div className="flex gap-2">
-          <ImportButton />
-          <button
-            onClick={() => downloadText(`finanzas-${todayISO()}.csv`, transactionsToCSV(filtered, categoryById))}
-            disabled={filtered.length === 0}
-            className="btn-secondary"
-          >
-            <Download size={15} aria-hidden />
-            Exportar CSV
-          </button>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Movimientos"
+        description="Todos tus registros. Busca, filtra y exporta o importa desde Excel."
+        actions={
+          <>
+            <ImportButton />
+            <button
+              onClick={() => downloadText(`finanzas-${todayISO()}.csv`, transactionsToCSV(filtered, categoryById))}
+              disabled={filtered.length === 0}
+              className="btn-secondary"
+            >
+              <Download size={15} aria-hidden />
+              Exportar CSV
+            </button>
+          </>
+        }
+      />
 
-      <div className="flex flex-wrap gap-2" role="search">
-        <div className="relative min-w-0 flex-[1_1_14rem]">
-          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" aria-hidden />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setFilter('q', e.target.value)}
-            placeholder="Buscar por descripción o categoría"
-            aria-label="Buscar movimientos"
-            className="field w-full pl-9"
-          />
+      <div className="card space-y-3 p-3" role="search">
+        <div className="flex flex-wrap gap-2">
+          <div className="relative min-w-0 basis-full sm:basis-auto sm:flex-[1_1_14rem]">
+            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" aria-hidden />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setFilter('q', e.target.value)}
+              placeholder="Buscar por descripción o categoría"
+              aria-label="Buscar movimientos"
+              className="field w-full pl-9"
+            />
+          </div>
+          <select value={categoryId} onChange={(e) => setFilter('categoria', e.target.value)} aria-label="Categoría" className="field min-w-0 flex-1 sm:max-w-[13rem] sm:flex-none">
+            <option value="">Todas las categorías</option>
+            <option value="none">Sin categoría</option>
+            {filterCategories.map((c) => (
+              <option key={c.id} value={c.id}>{type ? c.name : `${c.name} · ${TYPE_META[c.type].label.toLowerCase()}`}</option>
+            ))}
+          </select>
+          <select value={period} onChange={(e) => setFilter('periodo', e.target.value === 'todo' ? '' : e.target.value)} aria-label="Período" className="field min-w-0 flex-1 sm:flex-none">
+            {PERIODS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+          </select>
         </div>
-        <select value={type} onChange={(e) => setFilter('tipo', e.target.value)} aria-label="Tipo" className="field">
-          <option value="">Todos los tipos</option>
-          {TYPE_ORDER.map((t) => <option key={t} value={t}>{TYPE_META[t].plural}</option>)}
-        </select>
-        <select value={categoryId} onChange={(e) => setFilter('categoria', e.target.value)} aria-label="Categoría" className="field max-w-[12rem]">
-          <option value="">Todas las categorías</option>
-          <option value="none">Sin categoría</option>
-          {filterCategories.map((c) => (
-            <option key={c.id} value={c.id}>{type ? c.name : `${c.name} · ${TYPE_META[c.type].label.toLowerCase()}`}</option>
+        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5" role="group" aria-label="Tipo">
+          <button onClick={() => setFilter('tipo', '')} aria-pressed={!type} className="chip">Todos</button>
+          {TYPE_ORDER.map((t) => (
+            <button key={t} onClick={() => setFilter('tipo', t)} aria-pressed={type === t} className="chip">
+              <span className={`h-2 w-2 rounded-full ${TYPE_META[t].dot}`} aria-hidden />
+              {TYPE_META[t].plural}
+            </button>
           ))}
-        </select>
-        <select value={period} onChange={(e) => setFilter('periodo', e.target.value === 'todo' ? '' : e.target.value)} aria-label="Período" className="field">
-          {PERIODS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-        </select>
+          {hasFilters && (
+            <button onClick={() => setParams({}, { replace: true })} className="btn-ghost ml-auto h-8 px-2.5 text-xs sm:h-8">
+              <X size={14} aria-hidden />
+              Quitar filtros
+            </button>
+          )}
+        </div>
       </div>
 
-      <dl className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-        <div className="flex gap-1.5"><dt className="text-ink-secondary">Movimientos</dt><dd className="amount font-medium">{filtered.length}</dd></div>
-        <div className="flex gap-1.5"><dt className="text-ink-secondary">Ingresos</dt><dd className="amount font-medium text-positive">+{formatCLP(totals.income)}</dd></div>
-        <div className="flex gap-1.5"><dt className="text-ink-secondary">Gastos</dt><dd className="amount font-medium">−{formatCLP(totals.expenses)}</dd></div>
-        <div className="flex gap-1.5"><dt className="text-ink-secondary">Ahorro</dt><dd className="amount font-medium">{formatCLP(totals.savings)}</dd></div>
+      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard icon={ArrowLeftRight} tint="bg-accent/10 text-accent" label="Movimientos" value={filtered.length} />
+        <StatCard icon={TYPE_META.income.icon} tint={TYPE_META.income.tint} label="Ingresos" value={<span className="text-positive">+{formatCLP(totals.income)}</span>} />
+        <StatCard icon={TrendingDown} tint={TYPE_META.variable.tint} label="Gastos" value={`−${formatCLP(totals.expenses)}`} />
+        <StatCard icon={TYPE_META.savings.icon} tint={TYPE_META.savings.tint} label="Ahorro" value={formatCLP(totals.savings)} />
       </dl>
 
       {filtered.length === 0 ? (
-        <div className="card px-4 py-12 text-center">
-          <p className="font-medium">{hasFilters ? 'Ningún movimiento coincide con los filtros' : 'Todavía no hay movimientos'}</p>
-          {hasFilters && (
-            <button onClick={() => setParams({}, { replace: true })} className="btn-ghost mt-3">Quitar filtros</button>
+        <div className="card">
+          {hasFilters ? (
+            <EmptyState
+              icon={SearchX}
+              title="Ningún movimiento coincide con los filtros"
+              action={<button onClick={() => setParams({}, { replace: true })} className="btn-secondary">Quitar filtros</button>}
+            >
+              Prueba con otra búsqueda u otro período.
+            </EmptyState>
+          ) : (
+            <EmptyState
+              icon={Inbox}
+              title="Todavía no hay movimientos"
+              action={<button onClick={() => openNew()} className="btn-primary"><Plus size={15} aria-hidden />Nuevo movimiento</button>}
+            >
+              Registra tu primer ingreso o gasto, o importa tus datos desde un archivo CSV.
+            </EmptyState>
           )}
         </div>
       ) : (

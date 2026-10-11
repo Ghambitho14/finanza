@@ -3,12 +3,15 @@ import { useSearchParams } from 'react-router-dom'
 import { Coins, Plus, Repeat, X } from 'lucide-react'
 import { CategorySpendingCard } from '@/components/CategorySpendingCard'
 import { FixedBillsCard } from '@/components/FixedBillsCard'
+import { GettingStarted } from '@/components/GettingStarted'
 import { MonthNav } from '@/components/MonthNav'
 import { MonthOverview } from '@/components/MonthOverview'
 import { QuickAddExpense } from '@/components/QuickAddExpense'
 import { useToast } from '@/components/Toaster'
 import { useTransactionEditor } from '@/components/TransactionEditor'
 import { TransactionRow } from '@/components/TransactionRow'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { TypeIcon } from '@/components/ui/TypeIcon'
 import { errorMessage } from '@/lib/api'
 import {
   SMALL_EXPENSE_LIMIT,
@@ -63,7 +66,13 @@ export function Resumen() {
 
   return (
     <div className="space-y-6">
-      <MonthNav month={month} onChange={setMonth} />
+      <PageHeader
+        title="Resumen"
+        description="Cuánto te queda, qué falta por pagar y en qué se va tu plata."
+        actions={<MonthNav month={month} onChange={setMonth} />}
+      />
+
+      <GettingStarted />
 
       <MonthOverview
         summary={summary}
@@ -74,13 +83,16 @@ export function Resumen() {
 
       <RecurringBanner key={month} month={month} transactions={transactions} />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
           <section className="card">
             <div className="card-header">
-              <div>
-                <h2 className="card-title">Gastos variables</h2>
-                <p className="mt-0.5 text-xs text-ink-muted">Compras del día a día: comida, antojos, transporte</p>
+              <div className="flex min-w-0 items-center gap-3">
+                <TypeIcon type="variable" />
+                <div className="min-w-0">
+                  <h2 className="card-title">Gastos variables</h2>
+                  <p className="mt-0.5 text-xs text-ink-muted">Compras del día a día: comida, antojos, transporte</p>
+                </div>
               </div>
               <span className="amount text-sm font-semibold">{formatCLP(summary.variable)}</span>
             </div>
@@ -115,10 +127,9 @@ export function Resumen() {
             )}
           </section>
 
-          <FixedBillsCard month={month} bills={fixed.bills} others={fixed.others} />
-
           <TransactionListCard
             title="Ingresos y ahorro"
+            subtitle="Sueldo, otras entradas y lo que apartas"
             total={null}
             items={incomeAndSavings}
             empty="Sin ingresos ni ahorro este mes."
@@ -131,6 +142,7 @@ export function Resumen() {
         </div>
 
         <aside className="space-y-6">
+          <FixedBillsCard month={month} bills={fixed.bills} others={fixed.others} />
           <CategorySpendingCard monthTransactions={monthTxs} />
         </aside>
       </div>
@@ -152,9 +164,12 @@ function TransactionListCard({ title, subtitle, total, items, empty, showType, a
   return (
     <section className="card">
       <div className="card-header">
-        <div>
-          <h2 className="card-title">{title}</h2>
-          {subtitle && <p className="mt-0.5 text-xs text-ink-muted">{subtitle}</p>}
+        <div className="flex min-w-0 items-center gap-3">
+          <TypeIcon type="income" />
+          <div className="min-w-0">
+            <h2 className="card-title">{title}</h2>
+            {subtitle && <p className="mt-0.5 text-xs text-ink-muted">{subtitle}</p>}
+          </div>
         </div>
         {total !== null && <span className="amount text-sm font-semibold">{formatCLP(total)}</span>}
       </div>

@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { Plus } from 'lucide-react'
 import { AmountInput } from '@/components/AmountInput'
+import { QUICK_ADD_INPUT_ID } from '@/components/GettingStarted'
 import { useToast } from '@/components/Toaster'
 import { errorMessage } from '@/lib/api'
 import { defaultDateForMonth } from '@/lib/calculations'
@@ -58,6 +59,7 @@ export function QuickAddExpense({ month }: { month: string }) {
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1fr)_7.5rem_9rem_auto]">
         <input
           ref={descriptionRef}
+          id={QUICK_ADD_INPUT_ID}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="¿En qué gastaste?"
