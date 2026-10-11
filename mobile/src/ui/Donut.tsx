@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { View } from 'react-native'
 import Svg, { Circle, G } from 'react-native-svg'
 import { formatCLP, formatPercent } from '@shared/format'
@@ -16,9 +16,8 @@ interface Props {
   segments: DonutSegment[]
   /** Contenido del centro cuando no hay un segmento señalado. */
   center: ReactNode
-  /** Segmento resaltado desde fuera (al tocar la leyenda). */
+  /** Segmento resaltado (se elige tocando la leyenda: en el teléfono no hay "hover"). */
   activeKey?: string | null
-  onActiveChange?: (key: string | null) => void
   size?: number
 }
 
@@ -27,15 +26,8 @@ const THICKNESS = 14
 const GAP = 2
 
 /** Dona en SVG: cada segmento es un arco del mismo círculo (igual que la web). */
-export function Donut({ segments, center, activeKey, onActiveChange, size = 168 }: Props) {
+export function Donut({ segments, center, activeKey: active = null, size = 168 }: Props) {
   const { palette: c } = useTheme()
-  const [touched, setTouched] = useState<string | null>(null)
-  const active = activeKey ?? touched
-  const toggle = (key: string) => {
-    const next = active === key ? null : key
-    setTouched(next)
-    onActiveChange?.(next)
-  }
 
   const total = segments.reduce((s, x) => s + x.value, 0)
   const r = (size - THICKNESS) / 2
@@ -54,7 +46,7 @@ export function Donut({ segments, center, activeKey, onActiveChange, size = 168 
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <G rotation={-90} origin={`${size / 2}, ${size / 2}`}>
+        <G transform={`rotate(-90 ${size / 2} ${size / 2})`}>
           <Circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={THICKNESS} stroke={c.surface.hover} />
           {arcs.map((a) => (
             <Circle
@@ -68,7 +60,6 @@ export function Donut({ segments, center, activeKey, onActiveChange, size = 168 
               strokeDasharray={`${a.dash} ${circumference - a.dash}`}
               strokeDashoffset={-a.offset}
               opacity={active && active !== a.key ? 0.4 : 1}
-              onPress={() => toggle(a.key)}
             />
           ))}
         </G>

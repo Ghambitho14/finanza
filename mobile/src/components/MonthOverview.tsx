@@ -139,7 +139,7 @@ export function MonthOverview({ summary, previous, previousMonth, pendingFixed }
                     <Text size={12} color={good ? c.positive : c.negative} accessibilityLabel={change > 0 ? 'Subió' : 'Bajó'}>
                       {formatPercent(Math.abs(change))}
                     </Text>
-                    <Text size={12} tone="muted"> vs {formatMonthName(previousMonth).slice(0, 3)}</Text>
+                    <Text size={12} tone="muted" style={{ marginLeft: 4 }}>vs {formatMonthName(previousMonth).slice(0, 3)}</Text>
                   </View>
                 )}
                 {change === 0 && <Text size={12} tone="muted">Igual que {formatMonthName(previousMonth)}</Text>}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import Svg, { Circle, G, Line, Path, Polyline, Rect, Text as SvgText } from 'react-native-svg'
 import { formatCLP, formatCompactCLP, formatMonthLabel } from '@shared/format'
 import { SERIES, STACK, niceTicks, topOfStack, type HistoryRow } from '@shared/history'
@@ -55,8 +55,8 @@ export function HistoryChart({ rows }: { rows: HistoryRow[] }) {
               const topKey = topOfStack(row)
               let base = 0
               return (
-                <G key={row.month} onPress={() => setSelected(row.month)}>
-                  {/* Área táctil de toda la columna */}
+                <G key={row.month}>
+                  {/* Fondo del mes elegido */}
                   <Rect
                     x={AXIS_WIDTH + slot * i}
                     y={TOP}
@@ -99,11 +99,20 @@ export function HistoryChart({ rows }: { rows: HistoryRow[] }) {
                 fill={c.series.income}
                 stroke={c.surface.DEFAULT}
                 strokeWidth={2}
-                onPress={() => setSelected(r.month)}
               />
             ))}
           </Svg>
         )}
+        {/* Áreas táctiles de cada mes, encima del gráfico */}
+        {rows.map((row, i) => (
+          <Pressable
+            key={row.month}
+            accessibilityRole="button"
+            accessibilityLabel={`Ver ${formatMonthLabel(row.month)}`}
+            onPress={() => setSelected(row.month)}
+            style={{ position: 'absolute', top: TOP, height: plotH + BOTTOM, left: AXIS_WIDTH + slot * i, width: slot }}
+          />
+        ))}
       </View>
 
       {detail && (

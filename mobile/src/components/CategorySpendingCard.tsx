@@ -48,7 +48,6 @@ export function CategorySpendingCard({ monthTransactions }: { monthTransactions:
               <Donut
                 segments={segments.map((s) => ({ ...s, color: slotColor(c, s.slot) }))}
                 activeKey={active}
-                onActiveChange={setActive}
                 center={
                   <View style={{ alignItems: 'center' }}>
                     <Text size={12} tone="secondary">Total</Text>

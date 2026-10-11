@@ -4,6 +4,8 @@ Aplicación web de finanzas personales para llevar mes a mes los ingresos, los g
 
 Es una aplicación estática (PWA instalable) construida con React y TypeScript que se conecta directamente a [Supabase](https://supabase.com) para la autenticación y la base de datos. No requiere un servidor propio. Los montos se manejan en pesos chilenos (CLP, sin decimales).
 
+Además hay una **app nativa para Android** hecha con Expo (carpeta [`mobile/`](#app-android-expo)) que usa la misma base de datos y comparte la lógica con la web desde `shared/`.
+
 ## Tabla de contenidos
 
 - [Funcionalidades](#funcionalidades)
@@ -14,6 +16,7 @@ Es una aplicación estática (PWA instalable) construida con React y TypeScript 
 - [Puesta en marcha](#puesta-en-marcha)
 - [Desarrollo local](#desarrollo-local)
 - [Despliegue](#despliegue)
+- [App Android (Expo)](#app-android-expo)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Scripts disponibles](#scripts-disponibles)
 - [Licencia](#licencia)
@@ -30,6 +33,7 @@ Es una aplicación estática (PWA instalable) construida con React y TypeScript 
 - **Movimientos**: listado con búsqueda y filtros, edición, y **exportación / importación en CSV** (compatible con Excel, sin duplicar filas ya importadas).
 - **Histórico**: gráfico de ingresos frente a gastos y ahorro de los últimos 6, 12 o 24 meses.
 - **Usabilidad**: eliminar con opción de **deshacer**, atajo de teclado `N` para registrar un movimiento nuevo y PWA instalable en el escritorio o el teléfono.
+- **Privacidad**: borrar todos los datos desde el menú de la cuenta, y páginas públicas de privacidad y de borrado de cuenta.
 
 ## Stack tecnológico
 
@@ -153,11 +157,41 @@ docker run -d -p 3000:80 finanzas
 
 Recuerda agregar la URL de producción en las Redirect URLs de Supabase.
 
+## App Android (Expo)
+
+La carpeta `mobile/` es un proyecto [Expo](https://expo.dev) (SDK 57, Expo Router) con las mismas pantallas que la web: Resumen, Movimientos, Histórico y Categorías. Usa npm (no pnpm) y es independiente del build de la web.
+
+- **Lógica común**: `shared/` es TypeScript puro (tipos, cálculos, formatos, CSV, API de Supabase, textos). La web la reexporta desde `src/lib` y la app la importa como `@shared/*` (Metro la incluye con `watchFolders`). No debe importar paquetes de npm.
+- **Correos**: los enlaces de confirmar cuenta y elegir una nueva contraseña abren la web; después se entra en la app con email y contraseña. Por eso la app usa el flujo implícito de Supabase (sin PKCE).
+- **Borrar datos**: el menú de la cuenta (web y app) borra los movimientos y categorías con la función `delete_my_finance_data()`. El login se conserva porque el proyecto de Supabase lo comparte con otra app. Las páginas públicas `/privacidad` y `/eliminar-cuenta` son las URL que pide Google Play.
+
+Desarrollo:
+
+```bash
+cd mobile
+cp .env.example .env   # mismos valores que VITE_* de la web
+npm install
+npx expo start         # Expo Go en el teléfono, o "w" para verla en el navegador
+```
+
+Verificación: `npm run typecheck`, `npm run lint` y `npx expo-doctor`.
+
+Builds con [EAS](https://docs.expo.dev/build/introduction/) (en la nube, no hace falta Android Studio). Las variables `EXPO_PUBLIC_*` están cargadas en EAS para los entornos `preview` y `production`:
+
+```bash
+npx eas-cli@latest build -p android --profile preview      # APK para instalar directo en el teléfono
+npx eas-cli@latest build -p android --profile production   # AAB para Google Play
+```
+
+El primer `.aab` se sube a mano en Play Console (Prueba interna); `mobile/store/` tiene el ícono de 512 px y el gráfico de 1024×500 para la ficha.
+
 ## Estructura del proyecto
 
 ```text
 .
+├── mobile/                  # App Android con Expo (ver arriba)
 ├── public/                  # Íconos y manifest de la PWA
+├── shared/                  # Lógica común de la web y la app (TypeScript puro)
 ├── src/
 │   ├── components/          # Componentes de interfaz (layout, modales, tarjetas, editor)
 │   ├── lib/                 # Cliente Supabase, auth, API, estado, cálculos, CSV, formato

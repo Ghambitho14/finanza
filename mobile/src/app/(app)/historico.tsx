@@ -14,7 +14,7 @@ import { Card } from '@/ui/Card'
 import { EmptyState, PageHeader, SegmentedControl, StatCard } from '@/ui/misc'
 import { Text } from '@/ui/Text'
 
-const COLUMN = 104
+const COLUMN = 124
 
 export default function Historico() {
   const { palette: c } = useTheme()
@@ -121,7 +121,7 @@ interface CellProps {
 
 function Cell({ children, first, header, muted, strong, color }: CellProps) {
   return (
-    <View style={{ width: first ? 128 : COLUMN, paddingHorizontal: 16, paddingVertical: 10 }}>
+    <View style={{ width: first ? 148 : COLUMN, paddingHorizontal: 16, paddingVertical: 10 }}>
       <Text
         size={header ? 12 : 14}
         weight={header || strong ? 'medium' : 'regular'}

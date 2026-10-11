@@ -9,7 +9,7 @@ import { errorMessage } from '@/lib/api'
 import { useFinance } from '@/lib/finance-store'
 import { useTheme } from '@/lib/theme'
 import { TYPE_ICON, typeColor } from '@/lib/type-visuals'
-import { Button } from '@/ui/Button'
+import { Button, IconButton } from '@/ui/Button'
 import { Chip } from '@/ui/Chip'
 import { DateField } from '@/ui/DateField'
 import { AmountField, Label, TextField } from '@/ui/Field'
@@ -158,10 +158,9 @@ function TransactionSheet({ state, open, onClose }: { state: EditorState; open: 
 
   const footer = (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      {/* Solo ícono: en el teléfono no caben los tres botones con texto */}
       {editing && (
-        <Button variant="ghost" icon={Trash2} onPress={handleDelete} style={{ paddingHorizontal: 10 }}>
-          Eliminar
-        </Button>
+        <IconButton icon={Trash2} label="Eliminar" color={c.ink.secondary} onPress={handleDelete} style={{ width: 40, height: 40 }} />
       )}
       <View style={{ marginLeft: 'auto', flexDirection: 'row', gap: 8, flexShrink: 1 }}>
         <Button variant="ghost" onPress={onClose}>Cancelar</Button>
