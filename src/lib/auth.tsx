@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { AuthError, type Session } from '@supabase/supabase-js'
+import type { AuthError, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
-export const MIN_PASSWORD_LENGTH = 8
+export { MIN_PASSWORD_LENGTH, authErrorMessage } from '@shared/auth'
 
 interface AuthState {
   session: Session | null
@@ -18,27 +18,6 @@ interface AuthState {
 }
 
 const AuthContext = createContext<AuthState | null>(null)
-
-const AUTH_MESSAGES: Record<string, string> = {
-  invalid_credentials: 'Email o contraseña incorrectos',
-  email_not_confirmed: 'Aún no confirmas tu email. Revisa tu correo y abre el enlace.',
-  user_already_exists: 'Ese email ya tiene una cuenta',
-  email_exists: 'Ese email ya tiene una cuenta',
-  weak_password: `La contraseña es muy débil: usa al menos ${MIN_PASSWORD_LENGTH} caracteres`,
-  same_password: 'La nueva contraseña debe ser distinta a la anterior',
-  email_address_invalid: 'El email no es válido',
-  validation_failed: 'Revisa el email y la contraseña',
-  over_email_send_rate_limit: 'Se enviaron demasiados correos. Espera unos minutos.',
-  over_request_rate_limit: 'Demasiados intentos. Espera unos minutos.',
-}
-
-export function authErrorMessage(err: unknown): string {
-  if (err instanceof AuthError) {
-    if (err.code && AUTH_MESSAGES[err.code]) return AUTH_MESSAGES[err.code]
-    if (err.name === 'AuthRetryableFetchError') return 'No hay conexión con el servidor'
-  }
-  return 'No se pudo completar. Intenta de nuevo.'
-}
 
 const throwIfError = ({ error }: { error: AuthError | null }) => {
   if (error) throw error

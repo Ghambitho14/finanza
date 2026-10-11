@@ -32,6 +32,8 @@ export default defineConfig(({ command }) => ({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // Código común con la app Android (mobile/)
+      '@shared': fileURLToPath(new URL('./shared', import.meta.url)),
     },
   },
   server: {

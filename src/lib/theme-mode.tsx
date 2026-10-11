@@ -1,10 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { palettes, type Palette, type ThemeName } from '@/lib/theme'
+import { THEME_STORAGE_KEY as STORAGE_KEY, type ThemePreference } from '@shared/theme'
 
-export type ThemePreference = 'system' | ThemeName
+export type { ThemePreference }
 
-/** La misma clave la lee el script de index.html antes del primer pintado. */
-const STORAGE_KEY = 'finanzas:tema'
 const darkQuery = () => window.matchMedia('(prefers-color-scheme: dark)')
 
 function readPreference(): ThemePreference {

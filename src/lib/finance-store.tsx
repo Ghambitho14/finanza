@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { api, errorMessage } from '@/lib/api'
-import { importKey, missingRecurring, sameDayIn } from '@/lib/calculations'
+import { byName, cloneInputs, importInputs, newCategoriesForImport } from '@shared/finance-ops'
 import type {
   Category,
   CategoryInput,
@@ -30,9 +30,6 @@ interface FinanceState {
 }
 
 const FinanceContext = createContext<FinanceState | null>(null)
-
-const byName = (a: Category, b: Category) => a.name.localeCompare(b.name, 'es')
-const categoryKey = (type: string, name: string) => `${type}|${name.trim().toLowerCase()}`
 
 /**
  * Datos del usuario en memoria: el volumen de una persona es pequeño, así que
@@ -82,48 +79,15 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const cloneRecurring = useCallback(async (month: string): Promise<CloneResult> => {
-    const missing = missingRecurring(transactions, month, categoryById)
-    const created = await api.transactions.createMany(missing.map((t) => ({
-      description: t.description,
-      amount: t.amount,
-      type: t.type,
-      date: sameDayIn(month, t.date),
-      category_id: t.category_id,
-      recurring: true,
-    })))
+    const created = await api.transactions.createMany(cloneInputs(transactions, month, categoryById))
     setTransactions((list) => [...created, ...list])
     return { cloned: created.length, transactions: created }
   }, [transactions, categoryById])
 
   const importTransactions = useCallback(async (rows: ImportRow[]): Promise<ImportResult> => {
     // Categorías por nombre: se crean las que no existen
-    const ids = new Map(categories.map((c) => [categoryKey(c.type, c.name), c.id]))
-    const newCategories = new Map<string, CategoryInput>()
-    for (const row of rows) {
-      const key = row.category ? categoryKey(row.type, row.category) : null
-      if (key && !ids.has(key) && !newCategories.has(key)) {
-        newCategories.set(key, { name: row.category!.trim(), type: row.type, budget: null })
-      }
-    }
-    const createdCategories = await api.categories.createMany([...newCategories.values()])
-    for (const c of createdCategories) ids.set(categoryKey(c.type, c.name), c.id)
-
-    // Las filas que ya existen (o se repiten en el archivo) se omiten
-    const seen = new Set(transactions.map(importKey))
-    const inputs: TransactionInput[] = []
-    for (const row of rows) {
-      const key = importKey(row)
-      if (seen.has(key)) continue
-      seen.add(key)
-      inputs.push({
-        description: row.description,
-        amount: row.amount,
-        type: row.type,
-        date: row.date,
-        category_id: row.category ? ids.get(categoryKey(row.type, row.category)) ?? null : null,
-        recurring: row.recurring,
-      })
-    }
+    const createdCategories = await api.categories.createMany(newCategoriesForImport(rows, categories))
+    const inputs = importInputs(rows, [...categories, ...createdCategories], transactions)
 
     await api.transactions.createMany(inputs)
     await reload()

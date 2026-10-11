@@ -10,9 +10,9 @@
   },
   "scripts": {
     "dev": "vite --port 5173",
-    "build": "tsc -p tsconfig.app.json && tsc -p tsconfig.node.json && vite build",
+    "build": "tsc -p shared && tsc -p tsconfig.app.json && tsc -p tsconfig.node.json && vite build",
     "preview": "vite preview --port 5173",
-    "typecheck": "tsc -p tsconfig.app.json && tsc -p tsconfig.node.json",
+    "typecheck": "tsc -p shared && tsc -p tsconfig.app.json && tsc -p tsconfig.node.json",
     "generate-pwa-assets": "pwa-assets-generator"
   },
   "dependencies": {
