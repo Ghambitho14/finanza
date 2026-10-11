@@ -3,6 +3,8 @@ node_modules
 .pnp
 .pnp.js
 package-lock.json
+# La app Expo usa npm y EAS necesita su lockfile
+!mobile/package-lock.json
 yarn.lock
 npm-shrinkwrap.json
 

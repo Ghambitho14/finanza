@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">Finanzas</string>
-    <string name="title_activity_main">Finanzas</string>
-    <string name="package_name">com.belandria.finanzas</string>
-    <string name="custom_url_scheme">com.belandria.finanzas</string>
-</resources>

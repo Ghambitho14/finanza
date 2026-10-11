@@ -3,12 +3,10 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath } from 'node:url'
 
-export default defineConfig(({ command, mode }) => ({
+export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     VitePWA({
-      // En la app nativa (--mode app) no hay service worker: Capacitor ya sirve los archivos locales
-      disable: mode === 'app',
       registerType: 'autoUpdate',
       injectRegister: command === 'serve' ? false : 'auto',
       devOptions: {
