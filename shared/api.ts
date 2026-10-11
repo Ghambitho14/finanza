@@ -122,9 +122,12 @@ export function createApi(db: DbClient) {
       },
     },
     account: {
-      /** Borra la cuenta y todos sus datos (función delete_my_account en la base). */
-      remove: async () => {
-        unwrap(await db.rpc('delete_my_account'))
+      /**
+       * Borra todos los movimientos y categorías del usuario (función
+       * delete_my_finance_data). El login se conserva: lo comparten otras apps.
+       */
+      deleteData: async () => {
+        unwrap(await db.rpc('delete_my_finance_data'))
       },
     },
   }

@@ -1,6 +1,8 @@
 import { useState, type InputHTMLAttributes, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { Eye, EyeOff, LayoutDashboard, ReceiptText, ShieldCheck, Wallet } from 'lucide-react'
 import { InstallAppButton } from '@/components/InstallApp'
+import { PRIVACY_PATH } from '@shared/legal'
 
 interface Props {
   title: string
@@ -63,8 +65,11 @@ export function AuthLayout({ title, subtitle, children, footer }: Props) {
           </div>
           <div className="card p-5 sm:p-6">{children}</div>
           {footer && <div className="mt-5 text-center text-sm text-ink-secondary">{footer}</div>}
-          <div className="mt-8 text-center">
+          <div className="mt-8 flex flex-col items-center gap-3 text-center">
             <InstallAppButton variant="link" />
+            <Link to={PRIVACY_PATH} className="text-xs text-ink-muted hover:text-ink">
+              Política de privacidad
+            </Link>
           </div>
         </div>
       </main>

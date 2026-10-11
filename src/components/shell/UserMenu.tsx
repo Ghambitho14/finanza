@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronsUpDown, LogOut, Monitor, Moon, Sun } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ChevronsUpDown, LogOut, Monitor, Moon, ShieldCheck, Sun, Trash2 } from 'lucide-react'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { InstallAppButton } from '@/components/InstallApp'
 import { useToast } from '@/components/Toaster'
+import { api, errorMessage } from '@/lib/api'
 import { authErrorMessage, useAuth } from '@/lib/auth'
 import { useTheme, type ThemePreference } from '@/lib/theme-mode'
+import { DELETE_DATA_COPY, PRIVACY_PATH } from '@shared/legal'
 
 const THEMES: { value: ThemePreference; label: string; icon: typeof Sun }[] = [
   { value: 'system', label: 'Sistema', icon: Monitor },
@@ -21,6 +25,7 @@ export function UserMenu({ variant }: Props) {
   const { preference, setPreference } = useTheme()
   const toast = useToast()
   const [open, setOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const email = session?.user.email ?? ''
   const initial = email.charAt(0) || '?'
@@ -48,6 +53,18 @@ export function UserMenu({ variant }: Props) {
     } catch (err) {
       toast({ kind: 'error', text: authErrorMessage(err) })
     }
+  }
+
+  const handleDeleteData = async () => {
+    try {
+      await api.account.deleteData()
+    } catch (err) {
+      toast({ kind: 'error', text: errorMessage(err, DELETE_DATA_COPY.error) })
+      return
+    }
+    setConfirmDelete(false)
+    toast({ text: DELETE_DATA_COPY.done })
+    await signOut().catch(() => {})
   }
 
   const avatar = (
@@ -115,6 +132,26 @@ export function UserMenu({ variant }: Props) {
 
           <div className="my-1 border-t border-line" />
           <InstallAppButton variant="menu" onDone={() => setOpen(false)} />
+          <Link
+            role="menuitem"
+            to={PRIVACY_PATH}
+            onClick={() => setOpen(false)}
+            className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm text-ink hover:bg-surface-hover"
+          >
+            <ShieldCheck size={15} aria-hidden />
+            Privacidad
+          </Link>
+          <button
+            role="menuitem"
+            onClick={() => {
+              setOpen(false)
+              setConfirmDelete(true)
+            }}
+            className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm text-negative hover:bg-surface-hover"
+          >
+            <Trash2 size={15} aria-hidden />
+            {DELETE_DATA_COPY.action}
+          </button>
           <button
             role="menuitem"
             onClick={handleSignOut}
@@ -125,6 +162,15 @@ export function UserMenu({ variant }: Props) {
           </button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title={DELETE_DATA_COPY.title}
+        description={DELETE_DATA_COPY.description}
+        confirmLabel={DELETE_DATA_COPY.confirm}
+        onConfirm={handleDeleteData}
+        onClose={() => setConfirmDelete(false)}
+      />
     </div>
   )
 }
