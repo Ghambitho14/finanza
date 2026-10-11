@@ -4,6 +4,9 @@ import { useFinance } from '@/lib/finance-store'
 import { formatCLP, formatShortDate } from '@/lib/format'
 import { TYPE_META } from '@/lib/transaction-types'
 import type { Transaction } from '@/types/finance'
+import { signedAmount } from '@shared/transaction-types'
+
+export { signedAmount }
 
 interface Props {
   transaction: Transaction
@@ -11,12 +14,6 @@ interface Props {
   showType?: boolean
   /** Qué mostrar como fecha en la línea secundaria. */
   dateStyle?: 'short' | 'none'
-}
-
-export function signedAmount(t: Transaction): string {
-  if (t.type === 'income') return `+${formatCLP(t.amount)}`
-  if (TYPE_META[t.type].isExpense) return `−${formatCLP(t.amount)}`
-  return formatCLP(t.amount)
 }
 
 export function TransactionRow({ transaction: t, showType = false, dateStyle = 'short' }: Props) {

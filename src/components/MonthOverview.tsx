@@ -1,9 +1,9 @@
 import { ArrowDownRight, ArrowUpRight, CircleAlert, CircleCheck, TriangleAlert } from 'lucide-react'
 import { StatCard } from '@/components/ui/StatCard'
-import { percentChange } from '@/lib/calculations'
 import { formatCLP, formatMonthName, formatPercent } from '@/lib/format'
 import { TYPE_META } from '@/lib/transaction-types'
-import type { MonthSummary, TransactionType } from '@/types/finance'
+import type { MonthSummary } from '@/types/finance'
+import { OVERVIEW_TILES as TILES, monthOverview, tileStats, type SegmentKey } from '@shared/overview'
 
 interface Props {
   summary: MonthSummary
@@ -13,23 +13,18 @@ interface Props {
   pendingFixed: number
 }
 
-const TILES: TransactionType[] = ['income', 'fixed', 'variable', 'savings']
+const SEGMENT_CLASS: Record<SegmentKey, string> = {
+  fixed: 'bg-series-fixed',
+  pending: 'bg-series-fixed/30',
+  variable: 'bg-series-variable',
+  savings: 'bg-series-savings',
+}
 
 export function MonthOverview({ summary, previous, previousMonth, pendingFixed }: Props) {
   const { income, available } = summary
-  const afterBills = available - pendingFixed
-  const outflow = summary.fixed + pendingFixed + summary.variable + summary.savings
-  const scale = Math.max(income, outflow, 1)
-  const overspent = income > 0 && available < 0
-  const billsAtRisk = income > 0 && !overspent && afterBills < 0
-
-  const segments = [
-    { key: 'fixed', value: summary.fixed, className: 'bg-series-fixed', label: 'Fijos pagados' },
-    { key: 'pending', value: pendingFixed, className: 'bg-series-fixed/30', label: 'Fijos por pagar' },
-    { key: 'variable', value: summary.variable, className: 'bg-series-variable', label: 'Variables' },
-    { key: 'savings', value: summary.savings, className: 'bg-series-savings', label: 'Ahorro' },
-  ].filter((s) => s.value > 0)
-  const showFree = afterBills > 0 || segments.length === 0
+  const overview = monthOverview(summary, pendingFixed)
+  const { afterBills, scale, overspent, billsAtRisk, showFree } = overview
+  const segments = overview.segments.map((s) => ({ ...s, className: SEGMENT_CLASS[s.key] }))
 
   return (
     <div className="space-y-3">
@@ -117,13 +112,7 @@ export function MonthOverview({ summary, previous, previousMonth, pendingFixed }
 
       <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {TILES.map((type) => {
-          const value = summary[type]
-          // Sin registros aún en el mes, "−100%" solo confunde
-          const change = value > 0 ? percentChange(value, previous[type]) : null
-          // En gastos, subir es malo; en ingresos y ahorro, subir es bueno
-          const upIsGood = !TYPE_META[type].isExpense
-          const good = change !== null && (change >= 0) === upIsGood
-          const share = type !== 'income' && income > 0 ? value / income : null
+          const { value, change, good, share } = tileStats(type, summary, previous)
 
           return (
             <StatCard key={type} icon={TYPE_META[type].icon} tint={TYPE_META[type].tint} label={TYPE_META[type].plural} value={formatCLP(value)}>

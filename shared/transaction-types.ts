@@ -1,4 +1,5 @@
-import type { TransactionType } from './types'
+import { formatCLP } from './format'
+import type { Transaction, TransactionType } from './types'
 
 export interface TypeInfo {
   label: string
@@ -42,3 +43,10 @@ export const TYPE_INFO: Record<TransactionType, TypeInfo> = {
  * cuentas (categorías con monto mensual) que cada mes se marcan como pagadas.
  */
 export const recurringByDefault = (type: TransactionType): boolean => type === 'income' || type === 'savings'
+
+/** Monto con signo para listas: +ingresos, −gastos, ahorro sin signo. */
+export function signedAmount(t: Transaction): string {
+  if (t.type === 'income') return `+${formatCLP(t.amount)}`
+  if (TYPE_INFO[t.type].isExpense) return `−${formatCLP(t.amount)}`
+  return formatCLP(t.amount)
+}

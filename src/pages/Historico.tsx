@@ -6,21 +6,21 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { StatCard } from '@/components/ui/StatCard'
-import { currentMonth, monthRange, summaryForMonth } from '@/lib/calculations'
 import { useFinance } from '@/lib/finance-store'
-import { formatCLP, formatCompactCLP, formatMonthLabel, formatMonthShort, formatPercent } from '@/lib/format'
+import { formatCLP, formatCompactCLP, formatMonthLabel, formatPercent } from '@/lib/format'
 import { useTheme } from '@/lib/theme-mode'
 import { TYPE_META } from '@/lib/transaction-types'
-import type { MonthSummary, TransactionType } from '@/types/finance'
-
-const RANGES = [6, 12, 24] as const
-type Range = (typeof RANGES)[number]
-const STACK: TransactionType[] = ['fixed', 'variable', 'savings']
-const SERIES: TransactionType[] = ['income', 'fixed', 'variable', 'savings']
-
-type Row = MonthSummary & { month: string; label: string }
-
-const hasData = (r: MonthSummary) => r.income > 0 || r.expenses > 0 || r.savings > 0
+import type { TransactionType } from '@/types/finance'
+import {
+  HISTORY_RANGES as RANGES,
+  SERIES,
+  STACK,
+  buildHistoryRows,
+  historyStats,
+  topOfStack,
+  type HistoryRange as Range,
+  type HistoryRow as Row,
+} from '@shared/history'
 
 interface SegmentProps {
   x?: number
@@ -38,8 +38,7 @@ interface SegmentProps {
 function stackSegment(key: TransactionType) {
   return function Segment({ x = 0, y = 0, width = 0, height = 0, fill, payload }: SegmentProps) {
     if (height <= 0 || !payload) return <g />
-    const top = [...STACK].reverse().find((k) => payload[k] > 0)
-    const r = key === top ? Math.min(4, height, width / 2) : 0
+    const r = key === topOfStack(payload) ? Math.min(4, height, width / 2) : 0
     const d = `M${x},${y + height} L${x},${y + r} Q${x},${y} ${x + r},${y} L${x + width - r},${y} Q${x + width},${y} ${x + width},${y + r} L${x + width},${y + height} Z`
     return <path d={d} fill={fill} className="stroke-surface" strokeWidth={2} />
   }
@@ -76,28 +75,13 @@ export function Historico() {
   const { palette } = useTheme()
   const [range, setRange] = useState<Range>(12)
 
-  const rows: Row[] = useMemo(() => {
-    const all = monthRange(currentMonth(), range).map((month) => ({
-      month,
-      label: formatMonthShort(month),
-      ...summaryForMonth(transactions, month),
-    }))
-    // Los meses anteriores al primer registro no son "cero ingresos": se omiten
-    const first = all.findIndex(hasData)
-    return first < 0 ? [] : all.slice(first)
-  }, [transactions, range])
-
-  // Promedios solo sobre meses con datos, para que los meses vacíos no los diluyan
-  const active = rows.filter(hasData)
-  const avg = (pick: (r: Row) => number) => (active.length ? active.reduce((s, r) => s + pick(r), 0) / active.length : 0)
-  const totalIncome = active.reduce((s, r) => s + r.income, 0)
-  const totalSavings = active.reduce((s, r) => s + r.savings, 0)
-  const best = active.length ? active.reduce((a, b) => (b.available > a.available ? b : a)) : null
+  const rows: Row[] = useMemo(() => buildHistoryRows(transactions, range), [transactions, range])
+  const { avgExpenses, avgSavings, savingsRate, best } = historyStats(rows)
 
   const tiles = [
-    { label: 'Gasto promedio al mes', icon: TrendingDown, tint: TYPE_META.variable.tint, value: formatCLP(Math.round(avg((r) => r.expenses))) },
-    { label: 'Ahorro promedio al mes', icon: TYPE_META.savings.icon, tint: TYPE_META.savings.tint, value: formatCLP(Math.round(avg((r) => r.savings))) },
-    { label: 'Tasa de ahorro', icon: Percent, tint: 'bg-accent/10 text-accent', value: totalIncome > 0 ? formatPercent(totalSavings / totalIncome) : '—' },
+    { label: 'Gasto promedio al mes', icon: TrendingDown, tint: TYPE_META.variable.tint, value: formatCLP(avgExpenses) },
+    { label: 'Ahorro promedio al mes', icon: TYPE_META.savings.icon, tint: TYPE_META.savings.tint, value: formatCLP(avgSavings) },
+    { label: 'Tasa de ahorro', icon: Percent, tint: 'bg-accent/10 text-accent', value: savingsRate !== null ? formatPercent(savingsRate) : '—' },
     { label: 'Mejor mes', icon: Trophy, tint: TYPE_META.income.tint, value: best ? formatMonthLabel(best.month) : '—', sub: best ? `${formatCLP(best.available)} disponible` : undefined },
   ]
 

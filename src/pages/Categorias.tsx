@@ -8,33 +8,10 @@ import { TypeIcon } from '@/components/ui/TypeIcon'
 import { errorMessage } from '@/lib/api'
 import { currentMonth, inMonth } from '@/lib/calculations'
 import { useFinance } from '@/lib/finance-store'
-import { formatAmountInput, formatCLP, parseAmountInput } from '@/lib/format'
+import { formatAmountInput, formatCLP } from '@/lib/format'
 import { TYPE_META, TYPE_ORDER } from '@/lib/transaction-types'
 import type { Category, TransactionType } from '@/types/finance'
-
-/**
- * El monto de una categoría significa cosas distintas según el tipo: en fijos
- * es la cuenta mensual (aparece por pagar en el Resumen); en variables, el tope.
- */
-const AMOUNT_COPY: Partial<Record<TransactionType, { field: string; empty: string; hint: string }>> = {
-  fixed: {
-    field: 'Monto mensual',
-    empty: 'Sin monto',
-    hint: 'Con monto mensual, cada mes aparecen en el Resumen como cuentas para marcar pagadas.',
-  },
-  variable: {
-    field: 'Presupuesto',
-    empty: 'Sin presupuesto',
-    hint: 'El presupuesto es lo máximo que quieres gastar al mes en cada una.',
-  },
-}
-
-/** Monto opcional: vacío es "sin monto"; texto no numérico es un error. */
-function parseBudget(value: string): number | null | 'invalid' {
-  if (!value.trim()) return null
-  const n = parseAmountInput(value)
-  return Number.isNaN(n) || n <= 0 ? 'invalid' : n
-}
+import { AMOUNT_COPY, deleteCategoryDescription, parseBudget } from '@shared/categories'
 
 export function Categorias() {
   const { categories, transactions } = useFinance()
@@ -244,9 +221,7 @@ function DeleteCategoryDialog({ category, usage, onClose }: { category: Category
     <ConfirmDialog
       open={category !== null}
       title={`¿Eliminar «${category?.name ?? ''}»?`}
-      description={usage > 0
-        ? `Sus ${usage} ${usage === 1 ? 'movimiento se conserva' : 'movimientos se conservan'}, pero quedará${usage === 1 ? '' : 'n'} sin categoría.`
-        : 'Esta categoría no tiene movimientos.'}
+      description={deleteCategoryDescription(usage)}
       confirmLabel="Eliminar categoría"
       onClose={onClose}
       onConfirm={async () => {

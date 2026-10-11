@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useState, type ReactNode, type Ref } from 'react'
 import { RefreshControl, ScrollView, View } from 'react-native'
 import { CloudOff } from 'lucide-react-native'
 import { useFinance } from '@/lib/finance-store'
@@ -59,11 +59,12 @@ export function useRefresh() {
 }
 
 /** Pantalla con scroll, separación de 24 px entre bloques y recarga. */
-export function Screen({ children }: { children: ReactNode }) {
+export function Screen({ children, scrollRef }: { children: ReactNode; scrollRef?: Ref<ScrollView> }) {
   const refresh = useRefresh()
   return (
     <DataGate>
       <ScrollView
+        ref={scrollRef}
         refreshControl={refresh}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[SCREEN_PADDING, { gap: 24 }]}

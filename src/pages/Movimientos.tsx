@@ -9,38 +9,21 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatCard } from '@/components/ui/StatCard'
 import { errorMessage } from '@/lib/api'
-import { byDateDesc, currentMonth, monthOf, prevMonth, shiftMonth, summarize } from '@/lib/calculations'
+import { summarize } from '@/lib/calculations'
 import { downloadText, parseImportCSV, transactionsToCSV, type ParsedImport } from '@/lib/csv'
 import { useFinance } from '@/lib/finance-store'
 import { formatCLP, formatMonthLabel, todayISO } from '@/lib/format'
 import { TYPE_META, TYPE_ORDER } from '@/lib/transaction-types'
-import type { Transaction, TransactionType } from '@/types/finance'
-
-const PERIODS = [
-  { value: 'todo', label: 'Todo' },
-  { value: 'mes', label: 'Este mes' },
-  { value: 'mes-anterior', label: 'Mes anterior' },
-  { value: '3m', label: 'Últimos 3 meses' },
-  { value: 'anio', label: 'Este año' },
-] as const
-
-type Period = (typeof PERIODS)[number]['value']
-
-const PAGE_SIZE = 100
-
-function inPeriod(t: Transaction, period: Period): boolean {
-  const month = monthOf(t.date)
-  const now = currentMonth()
-  switch (period) {
-    case 'mes': return month === now
-    case 'mes-anterior': return month === prevMonth(now)
-    case '3m': return month >= shiftMonth(now, -2) && month <= now
-    case 'anio': return month.slice(0, 4) === now.slice(0, 4)
-    default: return true
-  }
-}
-
-const normalize = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+import type { TransactionType } from '@/types/finance'
+import {
+  MAX_IMPORT_BYTES,
+  PAGE_SIZE,
+  PERIODS,
+  filterTransactions,
+  groupByMonth,
+  importResultMessage,
+  isPeriod,
+} from '@shared/movements'
 
 export function Movimientos() {
   const { transactions, categories, categoryById } = useFinance()
@@ -51,7 +34,8 @@ export function Movimientos() {
   const query = params.get('q') ?? ''
   const type = (params.get('tipo') ?? '') as TransactionType | ''
   const categoryId = params.get('categoria') ?? ''
-  const period = (PERIODS.some((p) => p.value === params.get('periodo')) ? params.get('periodo') : 'todo') as Period
+  const periodParam = params.get('periodo')
+  const period = isPeriod(periodParam) ? periodParam : 'todo'
 
   const setFilter = (key: string, value: string) => {
     const next = new URLSearchParams(params)
@@ -63,16 +47,10 @@ export function Movimientos() {
     setVisible(PAGE_SIZE)
   }
 
-  const filtered = useMemo(() => {
-    const q = normalize(query.trim())
-    return transactions
-      .filter((t) => (!type || t.type === type)
-        && (!categoryId || (categoryId === 'none' ? !t.category_id : t.category_id === categoryId))
-        && inPeriod(t, period)
-        && (!q || normalize(t.description).includes(q)
-          || normalize((t.category_id && categoryById.get(t.category_id)?.name) || '').includes(q)))
-      .sort(byDateDesc)
-  }, [transactions, categoryById, query, type, categoryId, period])
+  const filtered = useMemo(
+    () => filterTransactions(transactions, categoryById, { query, type, categoryId, period }),
+    [transactions, categoryById, query, type, categoryId, period],
+  )
 
   const totals = summarize(filtered)
   const shown = filtered.slice(0, visible)
@@ -194,17 +172,6 @@ export function Movimientos() {
   )
 }
 
-function groupByMonth(items: Transaction[]): { month: string; items: Transaction[] }[] {
-  const groups: { month: string; items: Transaction[] }[] = []
-  for (const t of items) {
-    const month = monthOf(t.date)
-    const last = groups[groups.length - 1]
-    if (last?.month === month) last.items.push(t)
-    else groups.push({ month, items: [t] })
-  }
-  return groups
-}
-
 function ImportButton() {
   const { importTransactions } = useFinance()
   const toast = useToast()
@@ -216,7 +183,7 @@ function ImportButton() {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    if (file.size > 1_500_000) {
+    if (file.size > MAX_IMPORT_BYTES) {
       toast({ kind: 'error', text: 'El archivo es demasiado grande (máximo 1,5 MB)' })
       return
     }
@@ -227,12 +194,7 @@ function ImportButton() {
     if (!parsed) return
     setBusy(true)
     try {
-      const { imported, skipped, categoriesCreated } = await importTransactions(parsed.rows)
-      const extras = [
-        skipped > 0 ? `${skipped} ya existían` : '',
-        categoriesCreated > 0 ? `${categoriesCreated} ${categoriesCreated === 1 ? 'categoría nueva' : 'categorías nuevas'}` : '',
-      ].filter(Boolean).join(', ')
-      toast({ text: `${imported} ${imported === 1 ? 'movimiento importado' : 'movimientos importados'}${extras ? ` (${extras})` : ''}` })
+      toast({ text: importResultMessage(await importTransactions(parsed.rows)) })
       setParsed(null)
     } catch (err) {
       toast({ kind: 'error', text: errorMessage(err, 'No se pudo importar') })

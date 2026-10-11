@@ -37,19 +37,21 @@ interface StatCardProps {
   color: string
   label: string
   value: string
+  /** Color de la cifra (p. ej. ingresos en verde). */
+  valueColor?: string
   children?: ReactNode
   style?: StyleProp<ViewStyle>
 }
 
 /** Cifra destacada con ícono: ingresos, gastos, ahorro, promedios. */
-export function StatCard({ icon, color, label, value, children, style }: StatCardProps) {
+export function StatCard({ icon, color, label, value, valueColor, children, style }: StatCardProps) {
   return (
     <Card style={[{ padding: 16, flexGrow: 1, flexBasis: '45%' }, style]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <IconTile icon={icon} color={color} />
         <Text size={12} weight="medium" tone="secondary" style={{ flexShrink: 1 }}>{label}</Text>
       </View>
-      <Text size={20} weight="semibold" amount tight style={{ marginTop: 12 }} numberOfLines={1} adjustsFontSizeToFit>
+      <Text size={20} weight="semibold" amount tight color={valueColor} style={{ marginTop: 12 }} numberOfLines={1} adjustsFontSizeToFit>
         {value}
       </Text>
       {children}

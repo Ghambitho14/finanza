@@ -7,19 +7,17 @@ import { spendingByCategory } from '@/lib/calculations'
 import { useFinance } from '@/lib/finance-store'
 import { formatCLP, formatPercent } from '@/lib/format'
 import type { Transaction } from '@/types/finance'
-
-/** Desde aquí el presupuesto se marca "por agotarse". */
-const WARNING_RATIO = 0.8
+import { spendingBreakdown, type DonutSlot } from '@shared/spending'
 
 /** Colores de la dona en orden; desde la sexta categoría se agrupan en "Otras". */
-const SLOTS = [
-  { fill: 'bg-chart-1', stroke: 'stroke-chart-1' },
-  { fill: 'bg-chart-2', stroke: 'stroke-chart-2' },
-  { fill: 'bg-chart-3', stroke: 'stroke-chart-3' },
-  { fill: 'bg-chart-4', stroke: 'stroke-chart-4' },
-  { fill: 'bg-chart-5', stroke: 'stroke-chart-5' },
-]
-const OTHER = { fill: 'bg-ink-muted/50', stroke: 'stroke-ink-muted/50' }
+const SLOTS: Record<DonutSlot, { fill: string; stroke: string }> = {
+  1: { fill: 'bg-chart-1', stroke: 'stroke-chart-1' },
+  2: { fill: 'bg-chart-2', stroke: 'stroke-chart-2' },
+  3: { fill: 'bg-chart-3', stroke: 'stroke-chart-3' },
+  4: { fill: 'bg-chart-4', stroke: 'stroke-chart-4' },
+  5: { fill: 'bg-chart-5', stroke: 'stroke-chart-5' },
+  other: { fill: 'bg-ink-muted/50', stroke: 'stroke-ink-muted/50' },
+}
 
 export function CategorySpendingCard({ monthTransactions }: { monthTransactions: Transaction[] }) {
   const { categories } = useFinance()
@@ -27,21 +25,9 @@ export function CategorySpendingCard({ monthTransactions }: { monthTransactions:
   const rows = spendingByCategory(monthTransactions, categories)
   const hasBudgets = categories.some((c) => c.type === 'variable' && c.budget)
 
-  const spending = rows.filter((r) => r.spent > 0)
-  const total = spending.reduce((s, r) => s + r.spent, 0)
-  const keyOf = (row: (typeof rows)[number]) => row.category?.id ?? `none-${row.type}`
-  // Las filas ya vienen de mayor a menor gasto
-  const slotOf = (index: number, spent: number) => (spent > 0 && index < SLOTS.length ? SLOTS[index] : OTHER)
-  const otherTotal = spending.slice(SLOTS.length).reduce((s, r) => s + r.spent, 0)
-  const segments: DonutSegment[] = [
-    ...spending.slice(0, SLOTS.length).map((r, i) => ({
-      key: keyOf(r),
-      label: r.category?.name ?? 'Sin categoría',
-      value: r.spent,
-      stroke: SLOTS[i].stroke,
-    })),
-    ...(otherTotal > 0 ? [{ key: 'otras', label: 'Otras categorías', value: otherTotal, stroke: OTHER.stroke }] : []),
-  ]
+  const breakdown = spendingBreakdown(rows)
+  const { total } = breakdown
+  const segments: DonutSegment[] = breakdown.segments.map((s) => ({ ...s, stroke: SLOTS[s.slot].stroke }))
 
   return (
     <section className="card">
@@ -77,15 +63,10 @@ export function CategorySpendingCard({ monthTransactions }: { monthTransactions:
             </div>
           )}
           <ul className="space-y-1 p-2 pt-4">
-            {rows.map((row, index) => {
-              const key = keyOf(row)
-              const name = row.category?.name ?? 'Sin categoría'
-              const slot = slotOf(index, row.spent)
-              const ratio = row.budget ? row.spent / row.budget : null
-              const over = row.budget !== null && row.spent > row.budget
-              const near = ratio !== null && !over && ratio >= WARNING_RATIO
+            {breakdown.legend.map((row) => {
+              const { key, name, ratio, over, near, segmentKey } = row
+              const slot = SLOTS[row.slot]
               const fill = over ? 'bg-status-critical' : near ? 'bg-status-warning' : slot.fill
-              const segmentKey = slot === OTHER ? 'otras' : key
 
               return (
                 <li
