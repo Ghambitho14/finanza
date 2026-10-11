@@ -9,6 +9,12 @@ npm-shrinkwrap.json
 # Build
 dist
 dist-ssr
+dev-dist
+coverage
+*.tsbuildinfo
+.eslintcache
+.vercel
+.pnpm-store
 *.local
 
 # Environment variables
@@ -29,12 +35,14 @@ dist-ssr
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+*.log
 
 # Datos locales (no forman parte del proyecto)
 server/
@@ -48,3 +56,23 @@ agent-transcripts/
 # Esquema SQL, plantillas de correo y scripts de configuración (se mantienen fuera del repo)
 supabase/
 scripts/
+
+# Bases de datos locales
+*.sqlite
+*.sqlite-*
+*.db
+
+# Claves, certificados y firmas (nunca deben subirse)
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+keystore.properties
+google-services.json
+GoogleService-Info.plist
+
+# Builds de Android
+*.apk
+*.aab
