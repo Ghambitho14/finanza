@@ -74,6 +74,8 @@ export function Resumen() {
 
       <GettingStarted />
 
+      <CategorySpendingCard monthTransactions={monthTxs} />
+
       <MonthOverview
         summary={summary}
         previous={previousSummary}
@@ -143,7 +145,6 @@ export function Resumen() {
 
         <aside className="space-y-6">
           <FixedBillsCard month={month} bills={fixed.bills} others={fixed.others} />
-          <CategorySpendingCard monthTransactions={monthTxs} />
         </aside>
       </div>
     </div>

@@ -89,6 +89,8 @@ export default function Resumen() {
 
       <GettingStarted onQuickAdd={goToQuickAdd} />
 
+      <CategorySpendingCard monthTransactions={monthTxs} />
+
       <MonthOverview summary={summary} previous={previousSummary} previousMonth={previous} pendingFixed={fixed.pending} />
 
       <RecurringBanner key={month} month={month} transactions={transactions} />
@@ -151,7 +153,6 @@ export default function Resumen() {
       />
 
       <FixedBillsCard month={month} bills={fixed.bills} others={fixed.others} />
-      <CategorySpendingCard monthTransactions={monthTxs} />
     </Screen>
   )
 }

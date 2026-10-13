@@ -1,4 +1,6 @@
 import type { CategorySpending } from './calculations'
+import { TYPE_INFO } from './transaction-types'
+import type { MonthSummary } from './types'
 
 /** Desde aquí el presupuesto se marca "por agotarse". */
 export const WARNING_RATIO = 0.8
@@ -63,4 +65,21 @@ export function spendingBreakdown(rows: CategorySpending[]) {
   })
 
   return { total, segments, legend }
+}
+
+/** Partes de la dona principal: lo que sale del ingreso, en este orden. */
+export type MoneyKey = 'fixed' | 'variable' | 'savings'
+const MONEY_KEYS: MoneyKey[] = ['fixed', 'variable', 'savings']
+
+export interface MoneyPart {
+  key: MoneyKey
+  label: string
+  value: number
+}
+
+/** Dona de en qué se va la plata del mes: gastos fijos, variables y ahorro. */
+export function moneyBreakdown(summary: Pick<MonthSummary, MoneyKey>) {
+  const parts: MoneyPart[] = MONEY_KEYS.map((key) => ({ key, label: TYPE_INFO[key].plural, value: summary[key] }))
+  const total = parts.reduce((s, p) => s + p.value, 0)
+  return { total, parts, segments: parts.filter((p) => p.value > 0) }
 }
